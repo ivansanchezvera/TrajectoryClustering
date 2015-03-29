@@ -1,4 +1,6 @@
-import java.security.Timestamp;
+import java.sql.Timestamp;
+
+
 
 
 //Points on Trajectories have d Dimensions
@@ -62,7 +64,7 @@ public class Point {
 		float distance = 0;
 		
 		//Calculate Distance
-		distance = (float) Math.abs(this.t.getTimestamp().getTime() - otherPoint.t.getTimestamp().getTime());
+		distance = (float) Math.abs(this.t.getTime() - otherPoint.t.getTime());
 		
 		return distance;
 	}

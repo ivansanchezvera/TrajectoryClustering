@@ -14,6 +14,7 @@ public class Cluster {
 	public Cluster(int clusterID, String clusterName) {
 		this.clusterID = clusterID;
 		parentTrajectories = new HashSet<Integer>();
+		segments = new ArrayList<Segment>();
 	}
 	
 	public void addSegment(Segment s)
@@ -80,5 +81,15 @@ public class Cluster {
 		return cardinality;
 	}
 
+	@Override
+	public String toString() {
+		return "Cluster [clusterID=" + clusterID + ", clusterName="
+				+ clusterName + ", representativeTrajectory="
+				+ representativeTrajectory + ", segments=" + segments
+				+ ", cardinality=" + cardinality + ", parentTrajectories="
+				+ parentTrajectories + "]";
+	}
+
+	
 	
 }

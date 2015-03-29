@@ -4,14 +4,33 @@ import java.util.ArrayList;
 public class Traclus {
 
 	private ArrayList<Trajectory> trajectories;
-	
+	private ArrayList<Segment> segmentsCompleteSet;
+	private ArrayList<Cluster> clusterOfTrajectories;
+	private float eNeighborhoodParameter;
+	private int minLins;
+	private int cardinalityOfClusters;
 	//Parameters
 	//Notion of E Neighbourhood
 	//Notion of acceptable time distance
 	//
+	ArrayList<Cluster> setOfClusters;
 	
-	public Traclus() {
-		// TODO Auto-generated constructor stub
+	public Traclus(ArrayList<Trajectory> trajectories, float eNeighborhoodParameter, int minLins, int cardinalityOfClusters) {
+		this.trajectories = trajectories;
+		this.segmentsCompleteSet = new ArrayList<Segment>();
+		this.clusterOfTrajectories = new ArrayList<Cluster>();
+		this.eNeighborhoodParameter = eNeighborhoodParameter;
+		this.minLins = minLins;
+		this.cardinalityOfClusters = cardinalityOfClusters;
+		
+		
+	}
+	
+	public ArrayList<Cluster> execute()
+	{
+		segmentsCompleteSet = partition(trajectories);
+		clusterOfTrajectories = clusterSegments(segmentsCompleteSet, eNeighborhoodParameter, minLins, cardinalityOfClusters);
+		return clusterOfTrajectories;
 	}
 	
 	//3 clear stages
@@ -34,9 +53,9 @@ public class Traclus {
 	
 	//Do HASHING BEFORE THIS
 	//Clustering Phase
-	public ArrayList<Cluster> clusterSegments(ArrayList<Segment> setOfSegments, int eNeighborhood, int minLins, int cardinalityOfClusters)
+	public ArrayList<Cluster> clusterSegments(ArrayList<Segment> setOfSegments, float eNeighborhoodParameter, int minLins, int cardinalityOfClusters)
 	{
-		ArrayList<Cluster> setOfClusters = new ArrayList<Cluster>();
+		setOfClusters = new ArrayList<Cluster>();
 		
 		int clusterId = 0;
 		
@@ -49,7 +68,7 @@ public class Traclus {
 				//where n is the number of segments in the database.
 				//Find Out how to index this.
 				//MOre info at the end of page 7 (599) of paper
-				ArrayList<Segment> neighborSegments = computeNeighborhoodOfSegment(s);
+				ArrayList<Segment> neighborSegments = computeENeighborhoodOfSegment(s, eNeighborhoodParameter, setOfSegments);
 				
 				//Plus 1 cause my definition of neighborhood does not include core line itself
 				if(neighborSegments.size()+1>= minLins)
@@ -59,11 +78,16 @@ public class Traclus {
 					
 					//Before adding to cluster,
 					//Should I set all segments of the neighborhood as classified??
+					int i = 0;
 					for(Segment s1:neighborSegments)
 					{
+						
+						
 						s1.setClassified(true);
 						s1.setNoise(false);
+						//neighborSegments.set(i, s1);
 						c.addSegment(s1);
+						i++;
 					}
 					
 					//Add neighbours to cluster
@@ -81,7 +105,7 @@ public class Traclus {
 					queue.addAll(neighborSegments);
 					
 					//Now Expand Cluster
-					expandCluster(queue, clusterId, eNeighborhood, minLins);
+					expandCluster(queue, clusterId, eNeighborhoodParameter, minLins, setOfSegments);
 					clusterId++;
 				}else{
 					s.setClassified(true);
@@ -107,7 +131,63 @@ public class Traclus {
 		return setOfClusters;
 		
 	}
+
+	private ArrayList<Segment> computeENeighborhoodOfSegment(Segment s, float eParameter, ArrayList<Segment> allSegments) {
+		// TODO Auto-generated method stub'
+		ArrayList<Segment> neighborSegments = new ArrayList<Segment>();
+		
+		for(Segment possibleNeighborSegment:allSegments)
+		{
+			if(Segment.calculateDistance(s, possibleNeighborSegment)<=eParameter)
+			{
+				if(s!=possibleNeighborSegment)
+				{
+				neighborSegments.add(possibleNeighborSegment);
+				}
+			}
+		}
+		return neighborSegments;
+	}
+
+	//Step 2 - Clustering phase
+	//To compute a density-connected set
+	private void expandCluster(ArrayList<Segment> queue, int clusterId,
+			float eNeighborhoodParameter, int minLins, ArrayList<Segment> segmentsCompleteSet) {
+		// TODO Auto-generated method stub
+		while(!queue.isEmpty())
+		{
+			ArrayList<Segment> neighborhood = computeENeighborhoodOfSegment(queue.get(0), eNeighborhoodParameter, segmentsCompleteSet);
+			
+			if(Math.abs(neighborhood.size())>= minLins)
+			{
+				for(Segment s: neighborhood)
+				{
+					if(!s.isClassified() || s.isNoise())
+					{
+						//Cluster c = new Cluster(clusterId, "Cluster " + clusterId);
+						Cluster cTemp =  setOfClusters.get(clusterId);
+						s.setClassified(true);
+						cTemp.addSegment(s);
+						//setOfClusters.add(cTemp);
+						setOfClusters.set(clusterId, cTemp);
+					}
+						//Check this part
+					if(!s.isClassified())
+					{
+						//if element not in queue
+						if(!queue.contains(s))
+						{
+						queue.add(s);
+						}
+					}
+				}
+			}
+			queue.remove(0);
+		}
+	}
 	
 	//Calculate Representative Trajectories.
+	
+	
 
 }

@@ -30,7 +30,7 @@ public class Trajectory {
 		boolean validTrajectory = true;
 		for(int i = 0; i<points.size()-1; i++)
 		{
-			if(points.get(i).getT().getTimestamp().getTime() >= points.get(i+1).getT().getTimestamp().getTime())
+			if(points.get(i).getT().getTime() >= points.get(i+1).getT().getTime())
 			{
 				validTrajectory = false;
 				break;
@@ -54,7 +54,7 @@ public class Trajectory {
 		int startIndex = 0;
 		int length = 1;
 		
-		while(startIndex + length <= points.size())
+		while(startIndex + length < points.size()) //possible index out of bounds
 		{
 			int currentIndex = startIndex + length;
 			float costAddCurrentToCharPoints = calculateMDLWithCharPoint(startIndex,currentIndex);
@@ -78,6 +78,7 @@ public class Trajectory {
 		{
 			Segment s = new Segment(characteristicPoints.get(j), characteristicPoints.get(j+1));
 			s.setParentTrajectory(this.trajectoryId);
+			segmentsFromTrajectory.add(s);
 		}
 			
 		return segmentsFromTrajectory;
@@ -86,112 +87,72 @@ public class Trajectory {
 	private float calculateMDLRegularTrajectory(int startIndex, int currentIndex) {
 		// TODO Auto-generated method stub
 		float regularTrajectoryCost=0;
-		for(int i = startIndex; i<currentIndex-1; i++)
+		for(int i = startIndex; i<currentIndex; i++)
 		{
 			Segment s = new Segment(points.get(i), points.get(i+1));
-			regularTrajectoryCost =+ s.getLength();
+			regularTrajectoryCost += s.calculateLength();
 		}
 		
+		//becuase it needs to be log2.
+		//According to paper, MDLnopar is the MDL of the whole trajectory
+		//That is L(H) only, cause L(D|H) is 0.
+		//L(H) is the sum of the values.
+		regularTrajectoryCost = (float) (Math.log10(regularTrajectoryCost)/Math.log10(2));
 		return regularTrajectoryCost;
 	}
+	
 	private float calculateMDLWithCharPoint(int startIndex, int currentIndex) {
 		// BAsed in the MDL Principle.
 		// The best hypothesis to better explain a optimal trajectory,
 		// is the one that maximixes the compression while keeping the maximun number of points
 		
+		float log2 = (float) Math.log10(2);
 		//L(H) is the hypothesis, in this case the hypothetical path using char points
 		//This measures conciseness, L(H) increases with the number of partitions
-		float hypoteticalPathCost = (float) Math.log(points.get(startIndex).measureSpaceDistance(points.get(currentIndex)));
+		float hypoteticalPathCost = (float) Math.log10(points.get(startIndex).measureSpaceDistance(points.get(currentIndex)))/log2;
+		
 		
 		float perpendicularDistanceFromTrajectoryToHypotheticalPath = 0;
-		for(int i = startIndex; i<currentIndex-1; i++)
+		for(int i = startIndex; i<currentIndex; i++)
 		{
-			perpendicularDistanceFromTrajectoryToHypotheticalPath =+ calculatePerpendicularDistance(points.get(startIndex),points.get(currentIndex),points.get(i),points.get(i++));
+			Segment hypoteticalCharacteristicSegment = new Segment(points.get(startIndex),points.get(currentIndex));
+			Segment trajectoryPartialSegment = new Segment(points.get(i),points.get(i+1));
+			perpendicularDistanceFromTrajectoryToHypotheticalPath += 
+			Segment.calculatePerpendicularDistance(hypoteticalCharacteristicSegment, trajectoryPartialSegment);
 		}
 		
 		float angularDistanceFromTrajectoryToHypotheticalPath = 0;
-		for(int i = startIndex; i<currentIndex-1; i++)
+		for(int i = startIndex; i<currentIndex; i++)
 		{
-			angularDistanceFromTrajectoryToHypotheticalPath =+ calculateAngularDistance(points.get(startIndex),points.get(currentIndex),points.get(i),points.get(i++));
+			Segment hypoteticalCharacteristicSegment = new Segment(points.get(startIndex),points.get(currentIndex));
+			Segment trajectoryPartialSegment = new Segment(points.get(i),points.get(i+1));
+			angularDistanceFromTrajectoryToHypotheticalPath += 
+			Segment.calculateAngularDistance(hypoteticalCharacteristicSegment, trajectoryPartialSegment);
 		}
 		
 		//Now L(D|H) measures the distance cost from the actual trajectory given the hypotetical path. 
 		//This measures Preciseness, L(D|H) increases as a set of trajectory partitions deviates from the trajectory
-		float distanceCostFromTrajectoryToHypoteticalPath =
-				(float) (Math.log(perpendicularDistanceFromTrajectoryToHypotheticalPath)
-		+ Math.log(angularDistanceFromTrajectoryToHypotheticalPath));
+		//MDL(L(H)+L(D|H)).
+		float distanceCostFromTrajectoryToHypoteticalPath = 0;
+		if(perpendicularDistanceFromTrajectoryToHypotheticalPath>0 && angularDistanceFromTrajectoryToHypotheticalPath>0)
+		{
+			//This should be log2, why log 2?
+			//Apparently because this is the scale (log2) to measure smallest bit size
+		
+		distanceCostFromTrajectoryToHypoteticalPath =
+				(float) (Math.log10(perpendicularDistanceFromTrajectoryToHypotheticalPath)/log2
+		+ Math.log10(angularDistanceFromTrajectoryToHypotheticalPath)/log2) //This 2 is L(D|H)
+		+ hypoteticalPathCost; //This is L(H)
+		}else{
+			distanceCostFromTrajectoryToHypoteticalPath = hypoteticalPathCost;
+		}
 		
 		return distanceCostFromTrajectoryToHypoteticalPath;
 	}
 	
-	private float calculateAngularDistance(Point hPoint1, Point hPoint2, Point truePoint1, Point truePoint2) 
-	{
-		// TODO Auto-generated method stub
-		float angularDistance = 0;
-		
-		//Assuming Trajectories with direction
-		Segment newTrajectorySegment = new Segment(hPoint1, hPoint2);
-		Segment originalTrajectorySegment = new Segment(truePoint1, truePoint2);
-		
-		float cosAngle = 
-				(originalTrajectorySegment.calculateDotProduct(newTrajectorySegment))/
-				(newTrajectorySegment.calculateLength()*originalTrajectorySegment.calculateLength());
-		
-		
-		return angularDistance;
-	}
+	
 
-	private float calculatePerpendicularDistance(Point hPoint1, Point hPoint2, Point truePoint1, Point truePoint2) {
-		// TODO Auto-generated method stub
-		float perpendicularDistance = 0;
-		
-		//Optional
-		Segment newTrajectorySegment = new Segment(hPoint1, hPoint2);
-		Segment originalTrajectorySegment = new Segment(truePoint1, truePoint2);
-		Segment mainSegment;
-		Segment secondarySegment;
-		
-		if(originalTrajectorySegment.calculateLength()>=newTrajectorySegment.calculateLength())
-		{
-			mainSegment = originalTrajectorySegment;
-			secondarySegment = newTrajectorySegment;
-		}else
-		{
-			mainSegment = newTrajectorySegment;
-			secondarySegment = originalTrajectorySegment;
-		}
-		
-		Point projectionPointStart = findPerpendicularPoint(mainSegment.getStartPoint(), mainSegment.getEndPoint(), secondarySegment.getStartPoint());
-		Point projectionPointEnd = findPerpendicularPoint(mainSegment.getStartPoint(), mainSegment.getEndPoint(), secondarySegment.getEndPoint());
-		
-		float perpendicularDistanceStart = Math.abs(projectionPointStart.measureSpaceDistance(secondarySegment.getStartPoint()));
-		float perpendicularDistanceEnd = Math.abs(projectionPointEnd.measureSpaceDistance(secondarySegment.getEndPoint()));
-		
-		perpendicularDistance = (float) ((Math.pow(perpendicularDistanceStart, 2) + Math.pow(perpendicularDistanceEnd, 2))/(perpendicularDistanceStart + perpendicularDistanceEnd));
-		
-		return perpendicularDistance;
-	}
-
-	private Point findPerpendicularPoint(Point start, Point end, Point pointToProject)
-	{
-		boolean isValidPoint = false;
-		Point projectedPoint = null;
-		
-		float u = (pointToProject.getX() - start.getX()) * (end.getX() - start.getX()) + (pointToProject.getY() - start.getY()) * (end.getY() - start.getY()); 
-		
-		float udenom = (float) (Math.pow(end.getX() - start.getX(), 2) + Math.pow(end.getY() - start.getY(), 2));
-		
-		u = u/udenom;
-		
-		float projectedPointXVal = start.getX() + (u * (end.getX() - start.getX()));
-		float projectedPointYVal = start.getY() + (u * (end.getY() - start.getY()));
-		
-		projectedPoint = new Point(projectedPointXVal, projectedPointYVal, null);
-		
-		return projectedPoint;
-		
-	}
-
+	
 	public int getTrajectoryId() {
 		return trajectoryId;
 	}
