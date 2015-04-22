@@ -117,14 +117,17 @@ public class Traclus {
 		//Step 3
 		//Clusters are already allocated in my code, this differs from paper description of Traclus.
 		//Check cardinality
+
+		ArrayList<Cluster> clustersWithDesiredCardinality = new ArrayList<Cluster>();
 		for(Cluster c:setOfClusters)
 		{
-			if(c.calculateCardinality()<cardinalityOfClusters)
+			if(c.calculateCardinality()>=cardinalityOfClusters)
 			{
-				setOfClusters.remove(c);
+				clustersWithDesiredCardinality.add(c);
 			}
 		}
 		
+		setOfClusters = clustersWithDesiredCardinality;
 		//Cluster using Density-based method
 		//Need a notion of distance and a notion of time difference
 		

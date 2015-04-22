@@ -7,6 +7,7 @@ public class Cluster {
 	private int clusterID;
 	private String clusterName;
 	private Trajectory representativeTrajectory;
+	private int clusterSize;
 	private ArrayList<Segment> segments;
 	int cardinality;
 	HashSet<Integer> parentTrajectories;
@@ -15,11 +16,13 @@ public class Cluster {
 		this.clusterID = clusterID;
 		parentTrajectories = new HashSet<Integer>();
 		segments = new ArrayList<Segment>();
+		clusterSize = 0;
 	}
 	
 	public void addSegment(Segment s)
 	{
 		segments.add(s);
+		clusterSize = segments.size();
 	}
 	
 	public Trajectory calculateRepresentativeTrajectory()
@@ -85,11 +88,9 @@ public class Cluster {
 	public String toString() {
 		return "Cluster [clusterID=" + clusterID + ", clusterName="
 				+ clusterName + ", representativeTrajectory="
-				+ representativeTrajectory + ", segments=" + segments
+				+ representativeTrajectory  + ", size="
+						+ clusterSize + ", segments=" + segments
 				+ ", cardinality=" + cardinality + ", parentTrajectories="
 				+ parentTrajectories + "]";
 	}
-
-	
-	
 }

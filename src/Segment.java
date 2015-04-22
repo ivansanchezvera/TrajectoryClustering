@@ -98,6 +98,8 @@ public class Segment {
 				(originalTrajectorySegment.calculateDotProduct(newTrajectorySegment))/
 				(newTrajectorySegment.calculateLength()*originalTrajectorySegment.calculateLength());
 		
+		cosAngle = Math.nextDown(cosAngle);
+		
 		//Verify that a negative cosine means trajectories go in opposite direction
 		if(cosAngle<0)
 		{
