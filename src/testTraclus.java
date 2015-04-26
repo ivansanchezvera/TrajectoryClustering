@@ -223,10 +223,15 @@ public class testTraclus {
 			
 			ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(fileToUserFolder);
 			
-			//Set of points to make trajectory
-			ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
+			
+			//Just to give different trajectories different trajectory Id
+			int idTrajectory = 0;
+			
 			for(String userTrajectoryFile: UserTrajectoryFiles)
 			{
+				//Set of points to make trajectory
+				ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
+				
 				BufferedReader reader;
 				try {
 					reader = new BufferedReader(new InputStreamReader(
@@ -275,18 +280,19 @@ public class testTraclus {
 						//Float.i					
 						
 						Point tr0p1 = new Point(longitudeF, latitudeF , new java.sql.Timestamp(d.getTime()));
-						listPointsTrajectory0.add(tr0p1);
 						
-					}
-					
+						listPointsTrajectory0.add(tr0p1);
+						}		
 					}catch (FileNotFoundException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				Trajectory tr0 = new Trajectory(0, listPointsTrajectory0);
+				
+				Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
 				tr0.setMDLPrecision((float) 0.00001);
 				testTrajectories.add(tr0);
+				idTrajectory++;
 			}
 		}
 		return testTrajectories;
@@ -297,13 +303,13 @@ public class testTraclus {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		float eNeighborhoodParameter = 25;
+		float eNeighborhoodParameter = (float) 0.01;
 		int minLins = 3;
-		int cardinalityOfClusters = 1;
+		int cardinalityOfClusters = 3;
 		float MLDPrecision = (float) 0.0001;
 		
 		ArrayList<Trajectory> testTrajectories = testTraclus.generateTestTrajectories();
-		ArrayList<Trajectory> testTrajectoriesFromFile = testTraclus.generateTestTrajectoriesFromDataSet(0);	
+		ArrayList<Trajectory> testTrajectoriesFromFile = testTraclus.generateTestTrajectoriesFromDataSet(2);	
 		
 		//To use test trajectories from file
 		testTrajectories = testTrajectoriesFromFile;
@@ -319,7 +325,10 @@ public class testTraclus {
 		else{
 			for(Cluster c: testClusters)
 			{
-				System.out.println(c.toString());
+				c.calculateRepresentativeTrajectory(minLins, 0.00005);
+				System.out.println("Cluster: " + c.getClusterID());
+				//System.out.println("Representative trajectory: " + c.getRepresentativeTrajectory().toString());
+				System.out.println("Cluster: " + c.toString());
 			}
 		}
 	}

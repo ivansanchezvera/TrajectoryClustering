@@ -19,13 +19,24 @@ public class Segment {
 		// TODO Auto-generated constructor stub
 	}
 	
+	public Segment(Segment otherSegment)
+	{
+		this.startPoint = new Point(otherSegment.getStartPoint());
+		this.endPoint = new Point(otherSegment.getEndPoint());
+		this.classified = otherSegment.classified;
+		this.isNoise = otherSegment.isNoise;
+		this.parentTrajectory = otherSegment.parentTrajectory;
+		length = calculateLength();
+		
+	}
+	
 	public float calculateDotProduct(Segment otherSegment)
 	{
 		float dotProduct;
-		dotProduct = Math.abs(this.getEndPoint().getX()-this.startPoint.getX())
-				*Math.abs(otherSegment.getEndPoint().getX()-otherSegment.getStartPoint().getX())
-				+Math.abs(this.getEndPoint().getY()-this.startPoint.getY())
-				*Math.abs(otherSegment.getEndPoint().getY()-otherSegment.getStartPoint().getY());
+		dotProduct = (this.getEndPoint().getX()-this.startPoint.getX())
+				*(otherSegment.getEndPoint().getX()-otherSegment.getStartPoint().getX())
+				+(this.getEndPoint().getY()-this.startPoint.getY())
+				*(otherSegment.getEndPoint().getY()-otherSegment.getStartPoint().getY());
 		return dotProduct;
 	}
 	
@@ -98,7 +109,11 @@ public class Segment {
 				(originalTrajectorySegment.calculateDotProduct(newTrajectorySegment))/
 				(newTrajectorySegment.calculateLength()*originalTrajectorySegment.calculateLength());
 		
+		//Recheck this, why do I need it?
+		if(cosAngle!=1)
+		{
 		cosAngle = Math.nextDown(cosAngle);
+		}
 		
 		//Verify that a negative cosine means trajectories go in opposite direction
 		if(cosAngle<0)
@@ -207,5 +222,71 @@ public class Segment {
 		return projectedPoint;
 		
 	}
+	
+	public void rotatePointsCoordinates(double rotationAngleRadians)
+	{
+		//http://en.wikipedia.org/wiki/Rotation_matrix
+		double rotatedStartPointX = Math.cos(rotationAngleRadians) * this.getStartPoint().getX() - Math.sin(rotationAngleRadians) * this.getStartPoint().getY();
+		double rotatedStartPointY = +Math.sin(rotationAngleRadians) * this.getStartPoint().getX() + Math.cos(rotationAngleRadians) * this.getStartPoint().getY();
+		Point rotatedStartPoint = new Point((float) rotatedStartPointX, (float) rotatedStartPointY, this.getStartPoint().getT());
+		
+		double rotatedEndPointX = Math.cos(rotationAngleRadians) * this.getEndPoint().getX() - Math.sin(rotationAngleRadians) * this.getEndPoint().getY();
+		double rotatedEndPointY = +Math.sin(rotationAngleRadians) * this.getEndPoint().getX() + Math.cos(rotationAngleRadians) * this.getEndPoint().getY();
+		Point rotatedEndPoint = new Point((float) rotatedEndPointX, (float) rotatedEndPointY, this.getEndPoint().getT());
+		
+		this.startPoint = rotatedStartPoint;
+		this.endPoint = rotatedEndPoint;
+	}
+	//It would be nice to implement clone
+	//http://books.google.com.au/books?id=ka2VUBqHiWkC&pg=PA55&lpg=PA55&dq=effective%2Bjava%2Bclone&source=bl&ots=yXGhLnv4O4&sig=zvEip5tp5KGgwqO1sCWgtGyJ1Ns&hl=en&ei=CYANSqygK8jktgfM-JGcCA&sa=X&oi=book_result&ct=result&redir_esc=y#v=onepage&q=effective%2Bjava%2Bclone&f=false
+
+	public boolean SegmentTraverseThisXCoordinate(float x) {
+		// TODO Auto-generated method stub
+		boolean segmentIsTraversedByPointInX = false;
+		
+		if(!(x>this.getEndPoint().getX() && x>this.getStartPoint().getX()))
+		{
+			if(!(x<this.getEndPoint().getX()&&x<this.getStartPoint().getX()))
+			{
+				segmentIsTraversedByPointInX = true;
+			}
+		}
+		
+		return segmentIsTraversedByPointInX;
+	}
+
+	//Fix this method to support vertical segments (undefined slope)
+	//http://www.mathopenref.com/coordslope.html
+	public float getYCoodinateInX(float x) {
+		//http://www.math.washington.edu/~king/coursedir/m445w04/notes/vector/equations.html
+		//http://www.mathopenref.com/coordslope.html
+		float y = 0;
+		
+		//Slope m 
+		// m = (Ay - By)/(Ax-By)
+		float slope;
+		if(this.getEndPoint().getX()-this.getStartPoint().getX()!=0)
+		{
+		slope = (this.getEndPoint().getY()-this.getStartPoint().getY())/(this.getEndPoint().getX()-this.getStartPoint().getX());
+		}else{
+			slope = Float.POSITIVE_INFINITY;
+		}
+		//intercept b
+		//b = y - mx
+		float intercept =  this.getEndPoint().getY() - slope * this.getEndPoint().getX();
+		
+		//y = mx +b;
+		y = slope * x + intercept;
+		return y;
+	}
+
+	@Override
+	public String toString() {
+		return "Segment [startPoint=" + startPoint + ", endPoint=" + endPoint
+				+ ", length=" + length + ", parentTrajectory="
+				+ parentTrajectory + "]";
+	}
+	
+	
 
 }

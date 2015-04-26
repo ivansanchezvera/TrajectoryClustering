@@ -82,14 +82,14 @@ public class Trajectory {
 			float costAddCurrentToCharPoints = calculateMDLWithCharPoint(startIndex,currentIndex);
 			float costKeepTrajectoryPath = calculateMDLRegularTrajectory(startIndex,currentIndex);
 			
-			System.out.println("In iteration " + indexForDebug + " the values are:  current index: " + currentIndex + " lenght: " + length + " start index: " + startIndex);
+			//System.out.println("In iteration " + indexForDebug + " the values are:  current index: " + currentIndex + " lenght: " + length + " start index: " + startIndex);
 			
 			if(costAddCurrentToCharPoints > costKeepTrajectoryPath)
 			{
 				if(currentIndex-1 > 0)
 				{
 				characteristicPoints.add(points.get(currentIndex-1));
-				System.out.println("ArrayList number of elements: " + characteristicPoints.size());
+				//System.out.println("ArrayList number of elements: " + characteristicPoints.size());
 				//System.out.println("ArrayList size: " + characteristicPoints.toArray().length);
 				startIndex = currentIndex - 1;
 				length = 1;
@@ -98,7 +98,7 @@ public class Trajectory {
 				}
 				
 			}else{
-				System.out.println("Cost of char points route is less or equal to cost of keeping trajectory: " + costAddCurrentToCharPoints + " <= " + costKeepTrajectoryPath);
+				//System.out.println("Cost of char points route is less or equal to cost of keeping trajectory: " + costAddCurrentToCharPoints + " <= " + costKeepTrajectoryPath);
 				length = length+1;
 			}
 			indexForDebug++;
@@ -128,12 +128,16 @@ public class Trajectory {
 		}
 		
 		//here do the precision adjustment
-			
+		BigDecimal bd = BigDecimal.valueOf(regularTrajectoryCost);
+		bd.setScale(5, RoundingMode.HALF_UP);
+		
+		regularTrajectoryCost = bd.floatValue();
+		
 		//becuase it needs to be log2.
 		//According to paper, MDLnopar is the MDL of the whole trajectory
 		//That is L(H) only, cause L(D|H) is 0.
 		//L(H) is the sum of the values.
-		regularTrajectoryCost = (float) (Math.log10(regularTrajectoryCost)/log2Value) - precisionRegularizer;
+		regularTrajectoryCost = (float) Math.log10(regularTrajectoryCost)/log2Value - precisionRegularizer;
 		
 		//here do the precision adjustment
 		
@@ -222,4 +226,13 @@ public class Trajectory {
 	public void setMDLPrecision(float mDLPrecision) {
 		MDLPrecision = mDLPrecision;
 	}
+
+	@Override
+	public String toString() {
+		return "Trajectory [trajectoryId=" + trajectoryId + 
+				" pointsInTrajectory=" + points.size() + ", points="
+				+ points + ", MDLPrecision=" + MDLPrecision + "]";
+	}
+	
+	
 }
