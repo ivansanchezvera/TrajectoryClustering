@@ -208,7 +208,7 @@ public class testTraclus {
 	}
 	
 	
-	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSet(int userIndex)
+	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetMicrosoftGeolife(int userIndex)
 	{
 		String filePathToDataset = "C:\\Users\\Ivan\\Documents\\Unimelb\\Big Project\\My work\\Datasets\\Geolife Trajectories 1.3\\Data";
 		
@@ -297,23 +297,159 @@ public class testTraclus {
 		}
 		return testTrajectories;
 	}
+	
+	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetAnimalsStarkey(String animalCharacterParam, int yearParam, float MDLPrecision)
+	{
+		String starkeyTrajectoryFile = "C:\\Users\\Ivan\\Documents\\Unimelb\\Big Project\\My work\\Datasets\\Traclus original trajectories\\Animal Tracking\\Starkey_OR_Main_Telemetry_1993-1996_Data.txt";
+		
+		//Set of trajectories to return
+		ArrayList<Trajectory> testTrajectories = new ArrayList<Trajectory>();
+		
+		//Just to give different trajectories different trajectory Id
+		//int idTrajectory = 0;
+
+		//Set of points to make trajectory
+		//ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
+				
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new InputStreamReader(
+		    new FileInputStream(starkeyTrajectoryFile)));
+						
+			//Skip first line cause only contains headers
+			reader.readLine();
+					
+			//Reading Lines and creating trajectories
+			String line;
+			while ((line = reader.readLine()) != null) {
+				// process the line.
+				//System.out.println("Trajectory Line: " + line);
+				String[] trajectoryPointData = line.split(",");
+				//System.out.println("Trajectory decomposed Line: " + trajectoryPointData);
+						
+				String utmGrid = trajectoryPointData[0];
+				String utmGridNorth = trajectoryPointData[2];
+				String utmGridEast = trajectoryPointData[1];
+				String animalTrajectoryId = trajectoryPointData[3];
+				String gmtTime = trajectoryPointData[5];
+				String gmtDate = trajectoryPointData[6];
+				String specie = trajectoryPointData[10];
+				String utmPositionNorth = trajectoryPointData[11];
+				String utmPositionEast = trajectoryPointData[12];
+						
+						
+				int year = Integer.parseInt(gmtDate.substring(1,5));
+				int month = Integer.parseInt(gmtDate.substring(5,7));
+				int day = Integer.parseInt(gmtDate.substring(7,9));
+				SimpleDateFormat ft = new SimpleDateFormat ("yyyyMMdd"); 
+				Date d = new Date();
+				try {
+					d = ft.parse(gmtDate.substring(1, 10));
+				} catch (ParseException e) {
+				// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+								
+					//d.parse(dateInHumanFormat);
+				d.setHours(Integer.parseInt(gmtTime.substring(1,3)));
+				d.setMinutes(Integer.parseInt(gmtTime.substring(4,6)));
+				d.setSeconds(Integer.parseInt(gmtTime.substring(7,9)));
+				//Set timezone in GMT, now is in AUstralian time, this is an Error
+				
+				float longitudeF = Float.parseFloat(utmPositionEast);
+				float latitudeF = Float.parseFloat(utmPositionNorth);
+				//Float.i					
+				
+				Point tr0p1 = new Point(longitudeF, latitudeF , new java.sql.Timestamp(d.getTime()));
+				
+					//If is the specie of animal and the year we want, add
+					if(year==yearParam && animalCharacterParam.equals(specie.substring(1, 2)))
+					{
+						boolean trajectoryForAnimalExists = false;
+						int indexAnimalTrajectory = 0;
+						for(Trajectory t1:testTrajectories)
+						{
+							if(t1.getTrajectoryUser().equals(animalTrajectoryId))
+							{
+								trajectoryForAnimalExists = true;
+								indexAnimalTrajectory = testTrajectories.indexOf(t1);
+							}
+						}
+						
+						if(trajectoryForAnimalExists)
+						{
+							testTrajectories.get(indexAnimalTrajectory).getPoints().add(tr0p1);
+						}else{
+							ArrayList<Point> newAnimalPointForTrajectory = new ArrayList<Point>();
+							newAnimalPointForTrajectory.add(tr0p1);
+							int newTrajectoryID = testTrajectories.size()+1;
+							Trajectory newAnimalTrajectory = new Trajectory(newTrajectoryID, newAnimalPointForTrajectory);
+							newAnimalTrajectory.setTrajectoryUser(animalTrajectoryId);
+							newAnimalTrajectory.setMDLPrecision(MDLPrecision);
+							testTrajectories.add(newAnimalTrajectory);
+						}
+						
+					//listPointsTrajectory0.add(tr0p1);
+					}
+				}		
+			reader.close();
+			}catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+				}
+	//Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
+	//tr0.setMDLPrecision((float) 1);
+	//testTrajectories.add(tr0);
+	//idTrajectory++;
+	return testTrajectories;
+	}
+	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
+		ArrayList<Trajectory> testTrajectories;
+		//For my dummy trajectories
+		//ArrayList<Trajectory> testTrajectoriesDummy = testTraclus.generateTestTrajectories();
+		//testTrajectories = testTrajectoriesDummy;
+		
+		/* 
+		//Parameters for Dummy Trajectories
 		float eNeighborhoodParameter = (float) 0.01;
 		int minLins = 3;
 		int cardinalityOfClusters = 3;
 		float MLDPrecision = (float) 0.0001;
+		*/
 		
-		ArrayList<Trajectory> testTrajectories = testTraclus.generateTestTrajectories();
-		ArrayList<Trajectory> testTrajectoriesFromFile = testTraclus.generateTestTrajectoriesFromDataSet(2);	
+		//For Microsoft geolife trajectories
+		//ArrayList<Trajectory> testTrajectoriesGeolife = testTraclus.generateTestTrajectoriesFromDataSetMicrosoftGeolife(2);
+		//testTrajectories = testTrajectoriesGeolife;
 		
-		//To use test trajectories from file
-		testTrajectories = testTrajectoriesFromFile;
+		/* 
+		//Parameters for Geolife
+		float eNeighborhoodParameter = (float) 0.01;
+		int minLins = 3;
+		int cardinalityOfClusters = 3;
+		float MLDPrecision = (float) 0.0001;
+		*/
 		
+		//Parameters for Starkey
+		float eNeighborhoodParameter = (float) 27;
+		int minLins = 9;
+		int cardinalityOfClusters = 1;
+		float MLDPrecision = (float) 1;
+		
+		//For Starkley Animal trajectories to compara with paper
+		ArrayList<Trajectory> testTrajectoriesStarkey = testTraclus.generateTestTrajectoriesFromDataSetAnimalsStarkey("E", 1993,MLDPrecision);	
+		testTrajectories = testTrajectoriesStarkey;
+		 
+		
+		
+		
+				
 		Traclus traclus = new Traclus(testTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters);
 		ArrayList<Cluster> testClusters = traclus.execute();
 		

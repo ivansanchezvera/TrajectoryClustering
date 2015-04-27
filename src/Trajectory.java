@@ -9,6 +9,7 @@ public class Trajectory {
 	//What composes a Trajectory
 	//A series of Points
 	private int trajectoryId;
+	private String trajectoryUser;
 	private ArrayList<Point> points;
 	private boolean validTrajectory;
 	private float MDLPrecision;
@@ -19,6 +20,7 @@ public class Trajectory {
 	public Trajectory(int trajectoryId, ArrayList<Point> points) {
 
 		this.trajectoryId = trajectoryId;
+		//this.trajectoryUser = Integer.toString(trajectoryId);
 		this.points = points;
 		
 		validTrajectory = validateTrajectory();
@@ -225,6 +227,14 @@ public class Trajectory {
 
 	public void setMDLPrecision(float mDLPrecision) {
 		MDLPrecision = mDLPrecision;
+	}
+	
+	public String getTrajectoryUser() {
+		return trajectoryUser;
+	}
+
+	public void setTrajectoryUser(String trajectoryUser) {
+		this.trajectoryUser = trajectoryUser;
 	}
 
 	@Override
