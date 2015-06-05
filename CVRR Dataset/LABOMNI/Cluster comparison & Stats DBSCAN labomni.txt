@@ -1,0 +1,159 @@
+Real Clusters
+Cluster: Cluster [clusterID=0, size=8, elements=[2, 47, 54, 73, 122, 131, 139, 162], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=1, size=25, elements=[3, 7, 9, 12, 14, 17, 24, 26, 28, 30, 42, 45, 64, 67, 69, 85, 96, 107, 110, 113, 126, 135, 165, 186, 199], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=2, size=8, elements=[146, 147, 149, 151, 153, 155, 176, 180], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=3, size=3, elements=[181, 187, 188], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=4, size=30, elements=[0, 5, 18, 32, 33, 39, 49, 57, 61, 63, 72, 78, 79, 88, 101, 105, 108, 119, 124, 127, 129, 132, 141, 160, 166, 168, 195, 197, 203, 205], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=5, size=36, elements=[21, 36, 41, 48, 50, 53, 55, 58, 60, 74, 75, 82, 83, 87, 92, 98, 103, 115, 117, 120, 136, 137, 138, 140, 142, 144, 157, 158, 159, 169, 171, 172, 178, 183, 196, 201], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=6, size=28, elements=[4, 8, 10, 11, 13, 15, 19, 20, 25, 27, 29, 31, 38, 43, 46, 68, 91, 97, 109, 112, 114, 128, 134, 163, 164, 167, 173, 200], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=7, size=3, elements=[65, 193, 194], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=8, size=11, elements=[66, 86, 148, 150, 152, 154, 156, 174, 175, 190, 192], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=9, size=4, elements=[100, 177, 182, 189], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=10, size=20, elements=[1, 6, 16, 23, 35, 40, 77, 80, 84, 102, 106, 118, 121, 125, 130, 133, 161, 198, 206, 208], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=11, size=3, elements=[184, 185, 191], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=12, size=4, elements=[70, 89, 94, 207], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=13, size=22, elements=[22, 34, 37, 44, 51, 52, 56, 59, 62, 81, 90, 95, 99, 104, 111, 116, 123, 143, 145, 170, 179, 204], cardinality=0, parentTrajectories=[]]
+Cluster: Cluster [clusterID=14, size=4, elements=[71, 76, 93, 202], cardinality=0, parentTrajectories=[]]
+Calculated Clusters: 15 Method: DBSCAN
+Cluster: Cluster [clusterID=0, size=71, trajectories=[5, 18, 32, 33, 39, 49, 57, 61, 63, 72, 78, 79, 88, 101, 105, 108, 119, 124, 127, 129, 132, 141, 160, 166, 168, 195, 197, 203, 0, 76, 93, 202, 41, 48, 60, 75, 21, 36, 50, 53, 55, 74, 82, 87, 98, 103, 115, 116, 120, 136, 137, 138, 140, 142, 144, 158, 159, 169, 171, 172, 178, 183, 196, 201, 71, 83, 58, 85, 92, 117, 186]]
+Cluster: Cluster [clusterID=1, size=50, trajectories=[6, 16, 23, 35, 40, 77, 80, 84, 102, 106, 118, 121, 125, 130, 133, 161, 198, 206, 208, 1, 4, 20, 22, 25, 27, 29, 34, 37, 44, 51, 52, 56, 59, 62, 68, 81, 90, 95, 97, 99, 104, 109, 111, 123, 134, 143, 145, 170, 179, 204]]
+Cluster: Cluster [clusterID=2, size=27, trajectories=[47, 54, 73, 122, 131, 139, 162, 2, 45, 46, 3, 7, 9, 12, 14, 17, 24, 26, 28, 30, 42, 67, 96, 110, 113, 135, 176]]
+Cluster: Cluster [clusterID=3, size=31, trajectories=[10, 11, 13, 15, 19, 31, 38, 43, 66, 86, 91, 112, 114, 128, 163, 167, 173, 200, 8, 165, 193, 194, 164, 148, 150, 152, 154, 156, 174, 175, 190]]
+Cluster: Cluster [clusterID=4, size=8, trajectories=[107, 126, 180, 199, 64, 69, 146, 153]]
+Cluster: Cluster [clusterID=5, size=2, trajectories=[65, 185]]
+Cluster: Cluster [clusterID=6, size=7, trajectories=[89, 94, 100, 207, 70, 177, 182]]
+Cluster: Cluster [clusterID=7, size=4, trajectories=[149, 151, 155, 147]]
+Cluster: Cluster [clusterID=8, size=1, trajectories=[157]]
+Cluster: Cluster [clusterID=9, size=3, trajectories=[187, 188, 181]]
+Cluster: Cluster [clusterID=10, size=1, trajectories=[184]]
+Cluster: Cluster [clusterID=11, size=1, trajectories=[189]]
+Cluster: Cluster [clusterID=12, size=1, trajectories=[191]]
+Cluster: Cluster [clusterID=13, size=1, trajectories=[192]]
+Cluster: Cluster [clusterID=14, size=1, trajectories=[205]]
+
+
+Real Cluster: 0 Equivalent test Cluster: 2 Common Elements (TP): 8.0 False Positives (FP): 19.0 False Negatives (FN): 0.0 True Negatives  (TN): 182.0
+Per Cluster Stats for Cluster 0
+Purity: 	0.2962963
+Coverage: 	1.0
+Accuracy: 	0.90909094
+F-Measure:	0.22857141
+
+
+Real Cluster: 1 Equivalent test Cluster: 2 Common Elements (TP): 17.0 False Positives (FP): 10.0 False Negatives (FN): 8.0 True Negatives  (TN): 182.0
+Per Cluster Stats for Cluster 1
+Purity: 	0.6296296
+Coverage: 	0.68
+Accuracy: 	0.9170507
+F-Measure:	0.32692307
+
+
+Real Cluster: 2 Equivalent test Cluster: 7 Common Elements (TP): 4.0 False Positives (FP): 0.0 False Negatives (FN): 4.0 True Negatives  (TN): 205.0
+Per Cluster Stats for Cluster 2
+Purity: 	1.0
+Coverage: 	0.5
+Accuracy: 	0.98122066
+F-Measure:	0.33333334
+
+
+Real Cluster: 3 Equivalent test Cluster: 9 Common Elements (TP): 3.0 False Positives (FP): 0.0 False Negatives (FN): 0.0 True Negatives  (TN): 206.0
+Per Cluster Stats for Cluster 3
+Purity: 	1.0
+Coverage: 	1.0
+Accuracy: 	1.0
+F-Measure:	0.5
+
+
+Real Cluster: 4 Equivalent test Cluster: 0 Common Elements (TP): 29.0 False Positives (FP): 42.0 False Negatives (FN): 1.0 True Negatives  (TN): 138.0
+Per Cluster Stats for Cluster 4
+Purity: 	0.4084507
+Coverage: 	0.96666664
+Accuracy: 	0.7952381
+F-Measure:	0.28712872
+
+
+Real Cluster: 5 Equivalent test Cluster: 0 Common Elements (TP): 35.0 False Positives (FP): 36.0 False Negatives (FN): 1.0 True Negatives  (TN): 138.0
+Per Cluster Stats for Cluster 5
+Purity: 	0.49295774
+Coverage: 	0.9722222
+Accuracy: 	0.8238095
+F-Measure:	0.3271028
+
+
+Real Cluster: 6 Equivalent test Cluster: 3 Common Elements (TP): 18.0 False Positives (FP): 13.0 False Negatives (FN): 10.0 True Negatives  (TN): 178.0
+Per Cluster Stats for Cluster 6
+Purity: 	0.58064514
+Coverage: 	0.64285713
+Accuracy: 	0.89497715
+F-Measure:	0.30508474
+
+
+Real Cluster: 7 Equivalent test Cluster: 3 Common Elements (TP): 2.0 False Positives (FP): 29.0 False Negatives (FN): 1.0 True Negatives  (TN): 178.0
+Per Cluster Stats for Cluster 7
+Purity: 	0.06451613
+Coverage: 	0.6666667
+Accuracy: 	0.85714287
+F-Measure:	0.05882353
+
+
+Real Cluster: 8 Equivalent test Cluster: 3 Common Elements (TP): 10.0 False Positives (FP): 21.0 False Negatives (FN): 1.0 True Negatives  (TN): 178.0
+Per Cluster Stats for Cluster 8
+Purity: 	0.32258064
+Coverage: 	0.90909094
+Accuracy: 	0.8952381
+F-Measure:	0.23809522
+
+
+Real Cluster: 9 Equivalent test Cluster: 6 Common Elements (TP): 3.0 False Positives (FP): 4.0 False Negatives (FN): 1.0 True Negatives  (TN): 202.0
+Per Cluster Stats for Cluster 9
+Purity: 	0.42857143
+Coverage: 	0.75
+Accuracy: 	0.97619045
+F-Measure:	0.27272725
+
+
+Real Cluster: 10 Equivalent test Cluster: 1 Common Elements (TP): 20.0 False Positives (FP): 30.0 False Negatives (FN): 0.0 True Negatives  (TN): 159.0
+Per Cluster Stats for Cluster 10
+Purity: 	0.4
+Coverage: 	1.0
+Accuracy: 	0.8564593
+F-Measure:	0.2857143
+
+
+Real Cluster: 11 Equivalent test Cluster: 5 Common Elements (TP): 1.0 False Positives (FP): 1.0 False Negatives (FN): 2.0 True Negatives  (TN): 207.0
+Per Cluster Stats for Cluster 11
+Purity: 	0.5
+Coverage: 	0.33333334
+Accuracy: 	0.98578197
+F-Measure:	0.2
+
+
+Real Cluster: 12 Equivalent test Cluster: 6 Common Elements (TP): 4.0 False Positives (FP): 3.0 False Negatives (FN): 0.0 True Negatives  (TN): 202.0
+Per Cluster Stats for Cluster 12
+Purity: 	0.5714286
+Coverage: 	1.0
+Accuracy: 	0.98564595
+F-Measure:	0.36363637
+
+
+Real Cluster: 13 Equivalent test Cluster: 1 Common Elements (TP): 21.0 False Positives (FP): 29.0 False Negatives (FN): 1.0 True Negatives  (TN): 159.0
+Per Cluster Stats for Cluster 13
+Purity: 	0.42
+Coverage: 	0.95454544
+Accuracy: 	0.85714287
+F-Measure:	0.29166666
+
+
+Real Cluster: 14 Equivalent test Cluster: 0 Common Elements (TP): 4.0 False Positives (FP): 67.0 False Negatives (FN): 0.0 True Negatives  (TN): 138.0
+Per Cluster Stats for Cluster 14
+Purity: 	0.056338027
+Coverage: 	1.0
+Accuracy: 	0.67942584
+F-Measure:	0.05333333
+
+
+Per Method Statistics: 
+Purity: 	0.47809428
+Coverage: 	0.82502544
+Accuracy: 	0.8942944
+F-Measure: 	0.27147606
