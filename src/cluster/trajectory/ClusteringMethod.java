@@ -1,5 +1,5 @@
 package cluster.trajectory;
 
 public enum ClusteringMethod {
-	KMEANS,TRACLUS,DBSCAN,OPTICS
+	KMEANS,TRACLUS,DBSCAN,OPTICS,DBH_APPROXIMATION
 }
