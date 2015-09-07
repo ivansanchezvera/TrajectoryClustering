@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class Segment {
+public class Segment extends cluster.trajectory.Clusterable {
 
 	private Point startPoint;
 	private Point endPoint;
@@ -20,6 +20,9 @@ public class Segment {
     private double dx;
     private double dy;
     
+    //To compare objects between clusters
+    private int id;
+    
 	//Put time Info or Direction Info.
 	//What about precalculated distance, maybe not.
 	
@@ -33,6 +36,18 @@ public class Segment {
 		//Specially for Douglas Pecker
 		precalculateDistances(startPoint, endPoint);
 		// TODO Auto-generated constructor stub
+	}
+	
+	public Segment(int id, Point startPoint, Point endPoint) {
+		this.startPoint = startPoint;
+		this.endPoint = endPoint;
+		classified = false;
+		
+		//Precalculate Distances for Partitions
+		//Specially for Douglas Pecker
+		precalculateDistances(startPoint, endPoint);
+		// TODO Auto-generated constructor stub
+		this.id = id;
 	}
 
 
@@ -49,6 +64,12 @@ public class Segment {
 		//Specially for Douglas Pecker
 		precalculateDistances(startPoint, endPoint);
 		
+	}
+	
+	public Object clone()
+	{
+		Segment s = new Segment(this);
+		return s;
 	}
 	
 	/**

@@ -17,11 +17,11 @@ import fastdtw.com.util.DistanceFunctionFactory;
 
 import com.stromberglabs.cluster.Clusterable;
 
-public class Trajectory implements Clusterable{
+public class Trajectory extends cluster.trajectory.Clusterable implements Clusterable{
 
 	//What composes a Trajectory
 	//A series of Points
-	private int trajectoryId;
+	private int id;
 	private String trajectoryUser;
 	private ArrayList<Point> points;
 	private boolean validTrajectory;
@@ -38,7 +38,8 @@ public class Trajectory implements Clusterable{
 	
 	public Trajectory(int trajectoryId, ArrayList<Point> points) {
 
-		this.trajectoryId = trajectoryId;
+		this.id = trajectoryId;
+		super.id = trajectoryId;
 		//this.trajectoryUser = Integer.toString(trajectoryId);
 		this.points = points;
 		
@@ -52,6 +53,33 @@ public class Trajectory implements Clusterable{
 		MDLPrecision = 1;
 		
 		calculateCommonLogValues();
+		
+		this.elements = points;
+	}
+	
+	public Object clone() {
+		
+		ArrayList<Point> clonedPoints = new ArrayList<Point>();
+		for(Point p: points)
+		{
+			Point tempPoint = new Point(p);
+			clonedPoints.add(tempPoint);
+		}
+		
+		Trajectory t = new Trajectory(this.id, clonedPoints);
+		t.classified = this.classified;
+		t.clusterIdPreLabel = this.clusterIdPreLabel;
+		t.dtwAverage = this.dtwAverage;
+		t.isNoise = this.isNoise;
+		t.log2Value = this.log2Value;
+		t.MDLPrecision = this.MDLPrecision;
+		t.precisionRegularizer = this.precisionRegularizer;
+		t.trajectoryUser = this.trajectoryUser;
+		t.validTrajectory = this.validTrajectory;
+		
+		
+		return t;
+		
 	}
 	
 	private void calculateCommonLogValues()
@@ -136,7 +164,7 @@ public class Trajectory implements Clusterable{
 		for(int j=0; j<characteristicPoints.size()-1; j++)
 		{
 			Segment s = new Segment(characteristicPoints.get(j), characteristicPoints.get(j+1));
-			s.setParentTrajectory(this.trajectoryId);
+			s.setParentTrajectory(this.id);
 			segmentsFromTrajectory.add(s);
 		}
 			
@@ -160,7 +188,7 @@ public class Trajectory implements Clusterable{
 				Point currentPoint = characteristicPointsFromTrajectory.get(w);
 				Point nextPoint = characteristicPointsFromTrajectory.get(w+1);
 				Segment s = new Segment(currentPoint, nextPoint);
-				s.setParentTrajectory(this.trajectoryId);
+				s.setParentTrajectory(this.id);
 				characteristicSegmentsFromTrajectory.add(s);
 			}
 			
@@ -415,11 +443,11 @@ public class Trajectory implements Clusterable{
 	}
 
 	public int getTrajectoryId() {
-		return trajectoryId;
+		return id;
 	}
 
 	public void setTrajectoryId(int trajectoryId) {
-		this.trajectoryId = trajectoryId;
+		this.id = trajectoryId;
 	}
 
 	public ArrayList<Point> getPoints() {
@@ -460,12 +488,12 @@ public class Trajectory implements Clusterable{
 	}
 
 	public String printSummary() {
-		return "Trajectory [trajectoryId=" + trajectoryId + 
+		return "Trajectory [trajectoryId=" + id + 
 				" pointsInTrajectory=" + points.size() + "]";
 	}
 	
 	public String printVerbose(){
-		return "Trajectory [trajectoryId=" + trajectoryId + 
+		return "Trajectory [trajectoryId=" + id + 
 				" pointsInTrajectory=" + points.size() + ", points="
 				+ points + ", MDLPrecision=" + MDLPrecision + "]";
 	}
@@ -473,7 +501,7 @@ public class Trajectory implements Clusterable{
 	public String printLocation(){
 		String toPrint = "";
 		
-		toPrint = "Trajectory [trajectoryId=" + trajectoryId + 
+		toPrint = "Trajectory [trajectoryId=" + id + 
 				" pointsInTrajectory=" + points.size() + ", points=";
 		for(Point p: points)
 		{

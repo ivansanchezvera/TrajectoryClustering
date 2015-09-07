@@ -126,6 +126,49 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
+	public ArrayList<Cluster> executeKMedoidsClusterOverTrajectories(int k) {
+		
+		ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
+		
+		//test with all trajectories
+		simplifiedTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		//Export trajectories to visualize them
+		//exportPlotableCoordinatesForAllTrajectories(simplifiedTrajectories);
+		
+		//Now we are trying to obtain centroids based in DTW metric and not in Euclideand Distance like K-Means
+		clusterOfTrajectories = clusterTrajectoriesKMedoids(simplifiedTrajectories, k);		
+		
+		long stopTime = System.nanoTime();
+		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		
+		return clusterOfTrajectories;
+	}
+	
+	public ArrayList<Cluster> executeKmeansDTW(int k) {
+		
+		ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
+		
+		//test with all trajectories
+		simplifiedTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		//Export trajectories to visualize them
+		//exportPlotableCoordinatesForAllTrajectories(simplifiedTrajectories);
+		
+		//Now we are trying to obtain centroids based in DTW metric and not in Euclideand Distance like K-Means
+		clusterOfTrajectories = clusterTrajectoriesKMeansDTW(simplifiedTrajectories, k);		
+		
+		long stopTime = System.nanoTime();
+		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		
+		return clusterOfTrajectories;
+	}
+	
+
 	public ArrayList<Cluster> executeDBHApproximationOfClusterOverTrajectories(boolean simplifyTrajectories, int l, int numBits, float t1, float t2, int minNumElems, boolean merge, float mergeRatio)
 	{
 		ArrayList<Trajectory> simplifiedTrajectories = null;
@@ -704,6 +747,43 @@ public class Traclus {
 		return kmeansClusters;
 	}
 
+	/**
+	 * This method uses DTW distance to calculate new point that will be assumed as the center of the cluster
+	 * similar to kmeans but we do not need to calculate a centroid, instead we choose points (trajectories) as
+	 * the new center of the cluster until it converges 
+	 * @param simplifiedTrajectories
+	 * @param k
+	 * @return
+	 */
+	private ArrayList<Cluster> clusterTrajectoriesKMedoids(
+			ArrayList<Trajectory> simplifiedTrajectories, int k) {
+
+		ArrayList<Cluster> kmedoidsClusters = new ArrayList<Cluster>();
+		
+		//here call kmedoids
+		kmedoidsClusters = Kmedoids.execute(simplifiedTrajectories, k);
+		
+		return kmedoidsClusters;
+	}
+	
+	/**
+	 * This method uses DTW distance to calculate new point that will be assumed as the center of the cluster
+	 * in the real Kmeans way 
+	 * @param simplifiedTrajectories
+	 * @param k
+	 * @return
+	 */
+	private ArrayList<Cluster> clusterTrajectoriesKMeansDTW(
+			ArrayList<Trajectory> simplifiedTrajectories, int k) {
+
+		ArrayList<Cluster> kmeansDTWClusters = new ArrayList<Cluster>();
+		
+		//here call kmedoids
+		kmeansDTWClusters = KmeansDTW.execute(simplifiedTrajectories, k);
+		
+		return kmeansDTWClusters;
+	}
+
 	//Step 2 - Clustering phase
 	//To compute a density-connected set
 	private void expandClusterSegments(ArrayList<Segment> queue, int clusterId,
@@ -876,6 +956,8 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
+
+
 	
 	//Calculate Representative Trajectories.
 	//This step is done in each individual cluster, so it is in the cluster class.

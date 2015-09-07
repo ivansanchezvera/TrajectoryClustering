@@ -26,7 +26,9 @@ public class testTraclus {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION;
+		//ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION;
+		//ClusteringMethod method = ClusteringMethod.KMEDOIDS;
+		ClusteringMethod method = ClusteringMethod.KMEANSDTW;
 		//starkeyElk93Experiment(method);
 		CVRRExperiment(method);
 	}
@@ -144,7 +146,9 @@ public class testTraclus {
 		
 		
 		//For CVRR trajectory data
-		String CVRRdatasetName = "CSV Trajectories labomni";
+		//String CVRRdatasetName = "CSV Trajectories labomni";
+		//With new properties file it should be
+		String CVRRdatasetName = "CVRR_Dataset_Path";
 		ArrayList<Trajectory> testTrajectoriesCVRR = InputManagement.generateTestTrajectoriesFromDataSetCVRR(CVRRdatasetName);
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
@@ -239,6 +243,55 @@ public class testTraclus {
 		//I need to establish better parameters
 		testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(simplifyTrajectories, l, numBits, t1, t2, minNumElems, merge, mergeRatio);
 		}
+		
+		//For K-Medoids
+		if(method == ClusteringMethod.KMEDOIDS)
+		{
+		//Call KMedoids here
+			
+			//For Trajectory Partition using Douglas-Peucker
+			segmentationMethod = SegmentationMethod.douglasPeucker;
+			
+			//Parameters for Partition
+			double epsilonDouglasPeucker = 0.001;
+			int fixNumberPartitionSegment = 8;  //normal value = 8
+			boolean simplifyTrajectories = true; //Normally set to true
+			
+			//Parameters for K-Medoids
+			int k = 15;
+			
+			traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			
+
+			//For Kmeans for Whole trajectories
+			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k);
+			
+		}
+		
+		//For K-MeansDTW
+		if(method == ClusteringMethod.KMEANSDTW)
+		{
+		//Call KMedoids here
+			
+			//For Trajectory Partition using Douglas-Peucker
+			segmentationMethod = SegmentationMethod.douglasPeucker;
+			
+			//Parameters for Partition
+			double epsilonDouglasPeucker = 0.001;
+			int fixNumberPartitionSegment = 9;  //normal value = 8
+			boolean simplifyTrajectories = true; //Normally set to true
+			
+			//Parameters for K-Medoids
+			int k = 15;
+			
+			traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			
+
+			//For Kmeans for Whole trajectories
+			testClusters = traclus.executeKmeansDTW(k);
+			
+		}
+		
 		
 		//PrintReal Cluster Data
 		ArrayList<Cluster> realClusters = new ArrayList<Cluster>();
