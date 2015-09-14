@@ -5,45 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
-import classif.kmeans.DTWKNNClassifierKMeans;
-import weka.core.Instances;
-
 public class KmeansDTW {
 
 	public KmeansDTW() {
 		// TODO Auto-generated constructor stub
 	}
-
-	public static ArrayList<Cluster> executeWithWeka(List<Trajectory> trajectoryList, int k)
-	{
-		ArrayList<Cluster> resultingClusters = new ArrayList<Cluster>();
-		
-		//Use Library here
-		DTWKNNClassifierKMeans dtwknn = new DTWKNNClassifierKMeans();
-		
-		//Transform data into Weka Instances
-		
-		Instances data = null;
-		try {
-			dtwknn.buildClassifier(data);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return resultingClusters;
-	}
-	
-	/*
-	public static ArrayList<Cluster> execute(List<Trajectory> trajectoryList, int k)
-	{
-		ArrayList<Cluster> resultingClusters = new ArrayList<Cluster>();
-		
-		
-		
-		return resultingClusters;
-	}
-	*/
 	
 	public static ArrayList<Cluster> execute(List<Trajectory> trajectoryList, int k)
 	{

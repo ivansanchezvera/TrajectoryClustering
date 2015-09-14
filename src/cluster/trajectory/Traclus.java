@@ -73,7 +73,8 @@ public class Traclus {
 		
 
 		long stopTime = System.nanoTime();
-		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
 	}
@@ -102,7 +103,8 @@ public class Traclus {
 		
 
 		long stopTime = System.nanoTime();
-		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
 	}
@@ -121,17 +123,21 @@ public class Traclus {
 		clusterOfTrajectories = clusterTrajectoriesKMeans(simplifiedTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
-		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKMedoidsClusterOverTrajectories(int k) {
-		
-		ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
-		
-		//test with all trajectories
-		simplifiedTrajectories = trajectories;
+	public ArrayList<Cluster> executeKMedoidsClusterOverTrajectories(int k,  boolean simplifyTrajectories) {
+
+		ArrayList<Trajectory> simplifiedTrajectories = null;
+		if(simplifyTrajectories)
+		{
+			simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
+		}else{
+			simplifiedTrajectories = trajectories;
+		}
 		
 		long startTime = System.nanoTime();
 		
@@ -142,17 +148,21 @@ public class Traclus {
 		clusterOfTrajectories = clusterTrajectoriesKMedoids(simplifiedTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
-		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKmeansDTW(int k) {
+	public ArrayList<Cluster> executeKmeansDTW(int k, boolean simplifyTrajectories) {
 		
-		ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
-		
-		//test with all trajectories
-		simplifiedTrajectories = trajectories;
+		ArrayList<Trajectory> simplifiedTrajectories = null;
+		if(simplifyTrajectories)
+		{
+			simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
+		}else{
+			simplifiedTrajectories = trajectories;
+		}
 		
 		long startTime = System.nanoTime();
 		
@@ -163,7 +173,8 @@ public class Traclus {
 		clusterOfTrajectories = clusterTrajectoriesKMeansDTW(simplifiedTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
-		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
 	}
@@ -186,10 +197,23 @@ public class Traclus {
 		
 		//For new Rao Approach, do clustering over trajectories.
 		//Form clustering over DTW
-		clusterOfTrajectories = approximateClustersDBH(simplifiedTrajectories, l, numBits, t1, t2, minNumElems, merge, mergeRatio);
+		try {
+			//Old clustering with t1, t2 precalculated for all functions (wrong way but gave results)
+			//clusterOfTrajectories = approximateClustersDBH(simplifiedTrajectories, l, numBits, t1, t2, minNumElems, merge, mergeRatio);
+			
+			//New corrected way as suggested by zay
+			clusterOfTrajectories = approximateClustersDBH(simplifiedTrajectories, l, numBits, minNumElems, merge, mergeRatio);
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.err.println("Error, some hash functions have no interval t1-t2 defined.");
+			System.err.print(e.getMessage());
+			e.printStackTrace();
+		}
 		
 		long stopTime = System.nanoTime();
-		System.out.println("Clustering Execution time: " + (stopTime - startTime));
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		
 		return clusterOfTrajectories;
@@ -217,6 +241,18 @@ public class Traclus {
 		return setOfSegments;
 	}
 	
+	/**
+	 * Method to simplify trajectories, with Douglas-Peucker (DP) or the Traclus approach (MDL)
+	 * @param trajectories : A list of trajectories to simplify
+	 * @param strict : Determine wether trajectories with less points that the max number of partitions (numberOfPartitions) get removed from the
+	 * final set of simplified trajectories. True means that trajectories with less points that the number of partitions provoke an errors, since all the 
+	 * trajectories in the resulting set of trajectories in strict mode should have same length. False means trajectories with less points than the specified
+	 * max number of partitions are ignored for simplification and simply added to the resulting dataset with no modification (resulting dataset includes
+	 * all trajectories, and all dont have the same lenght, although the maximun lenght of any given trajectory is no more that number of partitions).
+	 * @param segmentationMethod : Determines the method to partition the trajectories: Douglas-Peucker (DP) or Traclus (MDL)
+	 * @param numberOfPartitions : Specifies the maximun number of partitions that any resulting trajectory in the set should have.
+	 * @return
+	 */
 	public static ArrayList<Trajectory> simplifyTrajectories(ArrayList<Trajectory> trajectories,boolean strict, SegmentationMethod segmentationMethod, int numberOfPartitions)
 	{
 		ArrayList<Trajectory> setOfSimplifiedTrajectories = new ArrayList<Trajectory>();
@@ -320,7 +356,237 @@ public class Traclus {
 	}
 	
 	//DBH HASHING
-	public ArrayList<Cluster> approximateClustersDBH(ArrayList<Trajectory> simplifiedTrajectories, int l, int k, float t1, float t2, int minNumElems, boolean merge, float mergeRatio)
+		public ArrayList<Cluster> approximateClustersDBH(ArrayList<Trajectory> simplifiedTrajectories, int l, int k, int minNumElems, boolean merge, float mergeRatio) throws Exception
+		{
+			
+
+			//Verify the interval???
+			
+			//Let X be a non metric space and D a distance function defined in X (X,D).
+			//Let H be a family of hash functions h:X->Z, where Z is the set of integers
+			//First pick integers k and l.
+			//Then construct l hash functions g1,g2,...,gl as concatenations of k functions
+			//chosen randomly from the family H.
+			// gi(x) = (hi1(x),hi2(x),...,hik(x))
+			// each db object is stored in each of the l hash tables defined by the functions of gi.
+			
+			//Given a Query object Q that belongs to space X
+			//retrival process first identifies all db objects that fall in the same bucket as Q
+			//in at least one of the l hash tables and then EXACT distances are measure between the query and the objects
+			
+			//If the measure is not assumed to be an Euclidean one, then we have to treat it like a blackbox.
+			//We cannot assume anything about the geometrical properties in that space, hence the LSH properties dont hold.
+			
+			//SO
+			//Propose a family of HASH Functions defined only by the distances between the objects
+			
+			//we need to define a function that maps an arbitrary space (X,D) into real number R.
+			//an example is the line projection function like:
+			
+			/*
+			double ds1s2 = Trajectory.calculateDTWDistance(s1,s2);
+			double dts1 = Trajectory.calculateDTWDistance(t,s1);
+			double dts2 = Trajectory.calculateDTWDistance(t,s2);
+			
+			double hash = (Math.pow(dts1, 2) + Math.pow(ds1s2, 2) - Math.pow(dts2, 2))/(2*ds1s2);
+			*/
+			
+			//If (X,D) was an euclidean space, the function defined by hash should had computed the projection of point X on the lines dfined by X1 and X2
+			//If X is non euclidean space, then there is no geometrical interpretation of function Hash
+			
+			//But as long as there is a distance measure D, such as DTW, Hash can still be defined and can project the X space into the space Real numbers R
+			//The function defined by Hash is a really rich family, any pair of objects can define a different function.
+			//With n objects we can define n^2/2 functions
+			
+			//Since function H provides real numbers and we need discrete numbers, we need to set thresholds t1,t2 that belong to R
+			
+			//We want binary so:
+			//Hash(t1,t2,X) = 0 if hash(x) belongs to interval [t1,t2]
+			//Hash(t1,t2,X) = 1 otherwise
+			
+			//Now the problem is to choose t1 and t2, such that half of the objects are in 0 and half are in 1.
+			//We want to have balanced hash tables so that is why we want to map hash values into half and half.
+			//Formally, there should be a set V(x1,x2) of intervals [t1,t2], such that every pair of values x1,x2 that belongs to space X
+			//so  that hash(t1,t2,X1,X2,X) splits the space in half.
+			
+			//Almost for every t there exist a t' such that H(X1,X2) maps half of the objects of X to either [t,t'] or to [t',t]
+			//For a set of N objects thers are n/2 ways of spliting the set int 2 equal-sized subsets based in the choice of [t1,t2] that belong to V(x1,x2),
+			//One alternative is the interval [t1,infinite] such that Hash(x1,x2,X0) is less than t1 for half the objects X that belong to X.
+			//The set V(x1,x2) contains all the intervasl to split X into 2 equal subsets.
+			
+			//Now we an define a family HDBH of hash functions for an arbitrary space (X,D):
+			
+			//HDBH : {F(x1,x2,t1,t2) for each x1,x2 that belongs to X space, [t1,t2] belong to V(X1,X2)}
+			
+			//We need to use binary hash functions h form HDBH to define k-bit hash functions gi. gi(X) = (hi1(x),hi2(x),...,hik(x))
+			
+			//so, to index or retrieve we need to::
+			//1.Choosing parameters k and l.
+			//2.Constructing l k-bit hash tables, and storing pointers to each database object at the appropriate l buckets.
+			//3. Comparing the query object with the database objects found in the l hash table buckets that the query is mapped to.
+			
+			//Choose randomly 10% of objects to try (so like 29 for LABOMNI)
+			//To create the DBH families
+			//Pick randonly 29 elements to crate a small subset 
+			//For each pair of objects X1,X2 from that subset, create a binary hash function
+			//Choosing randomly an interval [t1,t2] of V(X1,X2)
+			//Approximately C(n,r) = C(29,2) = 406 functions
+			
+			//For me K and L are:
+			//L 15 cause of the number of clusters in final dataset (cheating??)
+			//K is 8+1 cause that is the number of partitions for a given trajectoru
+			
+			//Create family of functions H
+			ArrayList<HashingFunction> hashingFamily = new ArrayList<HashingFunction>();
+		
+
+			//to select random trajectory elements
+			Random r = new Random();
+			
+			ArrayList<ConcatenatedHashingFuntions> lkBitFunctions = new ArrayList<ConcatenatedHashingFuntions>(l);
+			
+			//First obtain the set of V of intervals that make the function split in halt
+			//?? T1 and t2 should come from here
+			//Select thresholds CORRECTLY, this is shit!
+
+			for(int i=0; i<l; i++)
+			{
+				ConcatenatedHashingFuntions chf = new ConcatenatedHashingFuntions(k);
+				
+				while(!chf.isConcatenationComplete())
+				{
+					//First get 2 random members (trajectories)
+					Trajectory s1 = simplifiedTrajectories.get(r.nextInt(simplifiedTrajectories.size()));
+					Trajectory s2 = simplifiedTrajectories.get(r.nextInt(simplifiedTrajectories.size()));
+					
+					//Create the hashing function and calculate the interval t1-t2
+					HashingFunction newHF = new HashingFunction(s1,s2);
+					newHF.findT1T2(simplifiedTrajectories);
+					
+					chf.concatenate(newHF);
+				}
+				
+				lkBitFunctions.add(chf); 
+			}
+			
+			//now create hash tables and hash
+			ArrayList<HashTable> hashTables = new ArrayList<HashTable>();
+			
+			//Initialize hash tables
+			for(int w=0; w<lkBitFunctions.size();w++)
+			{
+				HashTable ht = new HashTable(w, k);
+				hashTables.add(ht);
+			}
+			
+			//now hash all trajectories
+			//Seems like a extremely expensive process
+			/*
+			 * This code works but needs recalculating clusters
+			for(Trajectory t0:simplifiedTrajectories)
+			{
+				for(int w=0; w<lkBitFunctions.size();w++)
+				{
+					ConcatenatedHashingFuntions tempCHF = lkBitFunctions.get(w);
+					//now hash and index all in once
+					
+					//This requires recalculating the hashes
+					hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
+				}
+			}
+			*/
+			
+
+			for(int w=0; w<lkBitFunctions.size();w++)
+			{
+				ConcatenatedHashingFuntions tempCHF = lkBitFunctions.get(w);
+				//now hash and index all in once
+					
+				//This requires recalculating the hashes
+				//hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
+					
+				hashTables.get(w).addAllToBucket(simplifiedTrajectories, tempCHF.execute(simplifiedTrajectories));
+			}
+				
+			//Now create the clusters, this seems infeasible
+			ArrayList<ApproximatedSetOfCluster> listApproximatedSetClusters = new ArrayList<ApproximatedSetOfCluster>();
+			
+			//For each hash table bring me only K top buckets with more elements
+
+			for(HashTable ht: hashTables)
+			{
+				ApproximatedSetOfCluster approxSetCluster = new ApproximatedSetOfCluster();
+				
+				for(HashBucket hb: ht.buckets)
+				{
+					if(hb!=null)
+					{
+						if(hb.bucketElements.size()>=minNumElems)
+						{
+							approxSetCluster.possibleClusters.add(hb);
+						}
+					}
+				}
+				listApproximatedSetClusters.add(approxSetCluster);
+			}
+			
+			//Definitive set of clusters
+			ApproximatedSetOfCluster finalCluster = new ApproximatedSetOfCluster();
+			
+			//First Prune Them
+			//Purging the clusters means just getting the top L from each hash table(top = more members).
+			for(ApproximatedSetOfCluster approxSetCluster: listApproximatedSetClusters)
+			{
+				//approxSetCluster.pruneApproximatedSetOfClusters(l);
+			}
+			
+			//Merging clusters between the different hash sets (clusters-bucket) from the
+			//different hash tables. If we merge we obtain more members in the clusters
+			//But is more expensive and imprecise
+			if(merge)
+			{
+				//Just validate and get the first Set of clusters (first hash table), this is for the merge
+				if(listApproximatedSetClusters.size()>0)
+				{
+					finalCluster = new ApproximatedSetOfCluster(listApproximatedSetClusters.get(0));
+				}
+
+				//Now intersect and merge
+				for(int w=1; w<listApproximatedSetClusters.size();w++)
+				{
+					finalCluster = ApproximatedSetOfCluster.mergeApproximatedSetCluster(finalCluster, listApproximatedSetClusters.get(w), minNumElems, mergeRatio);
+				}
+			}else{
+				//Just because its faster, get an Approx Cluster at random with no merge
+				//Get a random set of clusters from the hash table
+				finalCluster = listApproximatedSetClusters.get(r.nextInt(listApproximatedSetClusters.size()));
+			}
+				
+			//My common representation of set of Clusters
+			ArrayList<Cluster> finalListClusterRepresentation = new ArrayList<Cluster>();
+			//Now transform to the common representation
+			int v = 0;
+			for(HashBucket hb:finalCluster.possibleClusters)
+			{
+				Cluster ct = new Cluster(v, "Cluster"+v);
+			
+				for(Integer id:hb.bucketElements)
+				{
+					ct.addElement(simplifiedTrajectories.get(id));
+				}
+				
+				finalListClusterRepresentation.add(ct);
+				v++;
+			}
+			
+			//At the end, here, Clustering with DBScan DTW should be done inside each cluster
+			//and taking the biggest one (more elements) as the real one. This is only to get rid of noise (false positives)
+			
+			return finalListClusterRepresentation;
+		}
+	
+	//DBH HASHING
+	public ArrayList<Cluster> approximateClustersDBHOld(ArrayList<Trajectory> simplifiedTrajectories, int l, int k, float t1, float t2, int minNumElems, boolean merge, float mergeRatio) throws Exception
 	{
 		
 

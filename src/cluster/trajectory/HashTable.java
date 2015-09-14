@@ -44,6 +44,27 @@ public class HashTable {
 			buckets.set(bucketNumber, hBucket);
 		}
 	}
+	
+	/**
+	 * This method is to add all trajectories to their respective buckets
+	 * @param trajectories
+	 * @param bucketList
+	 */
+	public void addAllToBucket(ArrayList<Trajectory> trajectories, ArrayList<BitSet> bucketList)
+	{
+		for(int i=0;i<trajectories.size();i++)
+		{
+			int bucketNumber = bitSetToInt(bucketList.get(i));
+			if(buckets.get(bucketNumber)!=null)
+			{
+				buckets.get(bucketNumber).addElementToBucket(trajectories.get(i).getTrajectoryId());
+			}else{
+				HashBucket hBucket = new HashBucket();
+				hBucket.addElementToBucket(trajectories.get(i).getTrajectoryId());
+				buckets.set(bucketNumber, hBucket);
+			}
+		}
+	}
 
 	//this is a very stupid implementation
 	public static int bitSetToInt(BitSet bitSet)

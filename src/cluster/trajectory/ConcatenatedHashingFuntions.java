@@ -33,18 +33,42 @@ public class ConcatenatedHashingFuntions {
 	}
 	
 	//I should verify that the concatenation is complete before executing this
-	public BitSet execute(Trajectory t)
+	public BitSet execute(Trajectory t) throws Exception
 	{
 		BitSet hashResult = new BitSet(hashingFunctions.size());
 		
 		int i = 0;
 		for(HashingFunction h:hashingFunctions)
 		{
-			boolean hash = h.hashMe(t);
+			boolean	hash = h.hashToBoolean(t);	
+					
 			hashResult.set(i, hash);
 			i++;
 		}
 		
 		return hashResult;
+	}
+	
+	//I should verify that the concatenation is complete before executing this
+	public ArrayList<BitSet> execute(ArrayList<Trajectory> trajectories)
+	{
+		ArrayList<BitSet> hashedTrajectories = new ArrayList<BitSet>();
+	
+		
+		for(int j=0; j<trajectories.size(); j++)
+		{
+			BitSet hashResult = new BitSet(hashingFunctions.size());
+			int i = 0;
+			for(HashingFunction h:hashingFunctions)
+			{
+				boolean	hash = h.getCalculatedHashBool().get(j);	
+						
+				hashResult.set(i, hash);
+				i++;
+			}
+			hashedTrajectories.add(hashResult);
+		}
+		
+		return hashedTrajectories;
 	}
 }
