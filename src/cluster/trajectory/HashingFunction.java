@@ -121,6 +121,13 @@ public class HashingFunction {
 	 * only based in this subset.
 	 * @param trajectories : Complete set of trajectories
 	 * @param numSamples : Number of samples to obtain from the set of trajectories.
+	 * 
+	 * Correct: need to fix this method, cause at the end need to map all trajectories to 
+	 * a hash value, for that we need all trajectories.
+	 * 
+	 * Do this method is worth?
+	 * At the end, we still need to calculate all hashes for every trajectory, so 
+	 * doing this sampling saves no time at the end. Plus it sacrifices accuracy.
 	 */
 	public void findT1T2WithSampling(ArrayList<Trajectory> trajectories, int numSamples)
 	{

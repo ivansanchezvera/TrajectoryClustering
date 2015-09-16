@@ -14,6 +14,8 @@ import java.util.HashSet;
 
 import javax.lang.model.type.IntersectionType;
 
+import dataset.TrajectoryDatasets;
+
 
 public class testTrajectoryClustering {
 	
@@ -32,12 +34,15 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		//ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION;
-		//ClusteringMethod method = ClusteringMethod.KMEDOIDS;
 		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION;
+		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
-		CVRRExperiment(method, plotTrajectories);
+		boolean simplifyTrajectories = true;
+		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
+		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
+		int numberOfPartitionsPerTrajectory = 9; //normal value = 8 //9 for tests with zay
+		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory);
 	}
 
 	/**
@@ -90,6 +95,8 @@ public class testTrajectoryClustering {
 		//For Starkley Animal trajectories to compara with paper
 		ArrayList<Trajectory> testTrajectoriesStarkey = InputManagement.generateTestTrajectoriesFromDataSetAnimalsStarkey("E", 1993,MLDPrecision);	
 		testTrajectories = testTrajectoriesStarkey;
+
+		
 		
 		if(segmentationMethod == SegmentationMethod.traclus)
 		{
@@ -135,14 +142,21 @@ public class testTrajectoryClustering {
 		printSetOfCluster(minLins, testClusters, false);
 	}
 	
-	private static void CVRRExperiment(ClusteringMethod method, boolean plotTrajectories) {
+	private static void CVRRExperiment(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
+			boolean plotTrajectories, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, int fixNumberPartitionSegment) {
 
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
 		
 		//Partition Parameters
 		//Default DP unless stated otherwise
-		SegmentationMethod segmentationMethod = SegmentationMethod.douglasPeucker;
+		SegmentationMethod segmentationMethod;
+		if(simplificationMethod == null)
+		{
+			segmentationMethod = SegmentationMethod.douglasPeucker;
+		}else{
+			segmentationMethod = simplificationMethod;
+		}
 		//SegmentationMethod segmentationMethod = SegmentationMethod.traclus;
 		
 		//General Parameters, might be overwritten
@@ -150,39 +164,70 @@ public class testTrajectoryClustering {
 		int minLins = 8;
 		int cardinalityOfClusters = 9;
 		float MLDPrecision = (float) 1;
+		boolean strictSimplification = true;
 		
+		if(method == ClusteringMethod.DBH_APPROXIMATION)
+		{
+			strictSimplification = false;
+		}
 		
 		//For CVRR trajectory data
 		//String CVRRdatasetName = "CSV Trajectories labomni";
 		//With new properties file it should be
-		String CVRRdatasetName = "CVRR_Dataset_Path";
-		ArrayList<Trajectory> testTrajectoriesCVRR = InputManagement.generateTestTrajectoriesFromDataSetCVRR(CVRRdatasetName);
+		
+		String dataset = null;
+		if(trajectoryDataset == TrajectoryDatasets.LABOMNI)
+		{
+			dataset = "CVRR_Dataset_Labomni_Path";
+		}
+		
+		if(trajectoryDataset == TrajectoryDatasets.CROSS)
+		{
+			dataset = "CVRR_Dataset_Cross_Path";
+		}
+		
+		ArrayList<Trajectory> testTrajectoriesCVRR = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset);
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
+		//Before clustering, lets simplify trajectories if we have to.
+		//This have to be done here rather than in the clustering class to have a fair comparison.
+		ArrayList<Trajectory> workingTrajectories = new ArrayList<Trajectory>();
+		
+		
+		
+		if(simplifyTrajectories)
+		{
+			ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(testTrajectoriesCVRR, strictSimplification, segmentationMethod, fixNumberPartitionSegment);
+			workingTrajectories = simplifiedTrajectories;
+		}else{
+			workingTrajectories = testTrajectoriesCVRR;
+		}
+			
 		if(method == ClusteringMethod.TRACLUS)
 		{
-		segmentationMethod = SegmentationMethod.traclus;
-		//Override Parameters for Starkey using traclus
-		eNeighborhoodParameter = (float) 27;
-		minLins = 8;
-		cardinalityOfClusters = 9;
+			//Override Parameters for Starkey using traclus
+			segmentationMethod = SegmentationMethod.traclus;
 		
-		//For Original Traclus Trajectory Partition 		
-		traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, segmentationMethod);
-		//End of trajectory Partition via Original Traclus Partition Phase
+			eNeighborhoodParameter = (float) 27;
+			minLins = 8;
+			cardinalityOfClusters = 9;
 		
-		/*
-		 * 		//Parameter for DTW distance
-		eNeighborhoodParameter = (float) 520000;
-		minLins = 1;
-		cardinalityOfClusters = 1;
-		//end of douglas peucker ovewriten parameters for test
-		traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-		*/
-		
-		//For previous Traclus implementation
-		testClusters = traclus.executeTraclus();
+			//For Original Traclus Trajectory Partition 		
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, segmentationMethod);
+			//End of trajectory Partition via Original Traclus Partition Phase
+			
+			/*
+			 * 		//Parameter for DTW distance
+			eNeighborhoodParameter = (float) 520000;
+			minLins = 1;
+			cardinalityOfClusters = 1;
+			//end of douglas peucker ovewriten parameters for test
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			*/
+			
+			//For previous Traclus implementation
+			testClusters = traclus.executeTraclus();
 		}
 		
 		if(method == ClusteringMethod.DBSCAN)
@@ -190,7 +235,7 @@ public class testTrajectoryClustering {
 		segmentationMethod = SegmentationMethod.douglasPeucker;
 		//For Trajectory Partition using Douglas-Peucker
 		double epsilonDouglasPeucker = 0.001;
-		int fixNumberPartitionSegment = 8;
+		fixNumberPartitionSegment = 8;
 		
 		//overwriting test parameters
 		//eNeighborhoodParameter = (float) 27;
@@ -203,24 +248,24 @@ public class testTrajectoryClustering {
 		minLins = 1;
 		cardinalityOfClusters = 1;
 		//end of douglas peucker ovewriten parameters for test
-		traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 		
 		//Now working over Whole trajectory
-		testClusters = traclus.executeDensityBasedClusterOverTrajectories(false);
+		testClusters = traclus.executeDensityBasedClusterOverTrajectories();
 		}
 		//End of Douglas Peucker
 		
 
-		if(method == ClusteringMethod.KMEANS)
+		if(method == ClusteringMethod.KMEANS_EUCLIDEAN)
 		{
 		segmentationMethod = SegmentationMethod.douglasPeucker;
 		//For Trajectory Partition using Douglas-Peucker
 		double epsilonDouglasPeucker = 0.001;
-		int fixNumberPartitionSegment = 9; //normal value = 8 //9 for tests with zay
+		fixNumberPartitionSegment = 9; //normal value = 8 //9 for tests with zay
 		
 		//overwriting test parameters
 		//eNeighborhoodParameter = (float) 27;
-		traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 		
 
 		//For Kmeans for Whole trajectories
@@ -232,23 +277,23 @@ public class testTrajectoryClustering {
 		segmentationMethod = SegmentationMethod.douglasPeucker;
 		//For Trajectory Partition using Douglas-Peucker
 		double epsilonDouglasPeucker = 0.001;
-		int fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-		boolean simplifyTrajectories = false; //Normally set to true
+		fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
+		simplifyTrajectories = false; //Normally set to true but now false cause we are simplifying before.
 		
 		//Parameters only for DBH APPROXIMATION
-		int minNumElems = 2;
-		float t1 = 0; //Find this parameter
-		float t2 = 1500; //Should be infinity
+		int minNumElems = 1;
+		//float t1 = 0; //Find this parameter
+		//float t2 = 1500; //Should be infinity
 		int l = 1;
-		int numBits = 4; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
+		int numBits = 5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
 		float mergeRatio = 1/2;
 		boolean merge = false;
 		
-		traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 		
 		
 		//I need to establish better parameters
-		testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(simplifyTrajectories, l, numBits, t1, t2, minNumElems, merge, mergeRatio);
+		testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(l, numBits, minNumElems, merge, mergeRatio);
 		}
 		
 		//For K-Medoids
@@ -261,16 +306,16 @@ public class testTrajectoryClustering {
 			
 			//Parameters for Partition
 			double epsilonDouglasPeucker = 0.001;
-			int fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-			boolean simplifyTrajectories = true; //Normally set to true
+			fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
+			simplifyTrajectories = true; //Normally set to true
 			
 			//Parameters for K-Medoids
 			int k = 15;
 			
-			traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
 			//For Kmeans for Whole trajectories
-			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k, simplifyTrajectories);
+			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k);
 			
 		}
 		
@@ -284,30 +329,28 @@ public class testTrajectoryClustering {
 			
 			//Parameters for Partition
 			double epsilonDouglasPeucker = 0.001;
-			int fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-			boolean simplifyTrajectories = true; //Normally set to true
 			
 			//Parameters for K-Medoids
 			int k = 15;
 			
-			traclus = new Traclus(testTrajectoriesCVRR, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
 
+			
 			//For Kmeans for Whole trajectories
-			testClusters = traclus.executeKmeansDTW(k, simplifyTrajectories);
+			testClusters = traclus.executeKmeansDTW(k);
 			
 		}
 		
 		
 		//PrintReal Cluster Data
 		ArrayList<Cluster> realClusters = new ArrayList<Cluster>();
-		for(Trajectory t:testTrajectoriesCVRR)
+		for(Trajectory t:workingTrajectories)
 		{
 			int clusterID = t.getClusterIdPreLabel();
-			
-			if(realClusters!=null && realClusters.size()<clusterID)
+			if(realClusters!=null && (realClusters.size()<=clusterID )) //|| realClusters.size()==0 
 			{
-				for(int j = realClusters.size(); j<=clusterID+1; j++)
+				for(int j = realClusters.size(); j<=clusterID; j++)
 				{
 					Cluster c = new Cluster(j, "Cluster"+j);
 					realClusters.add(c);
@@ -335,38 +378,47 @@ public class testTrajectoryClustering {
 		//to Plot clusters
 		if(plotTrajectories)
 		{
-		TrajectoryPlotter.drawAllClusters(testClusters);
-		TrajectoryPlotter.drawAllClustersInSameGraph(testClusters);
+			TrajectoryPlotter.drawAllClusters(testClusters);
+			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters);
 		}
 		//To calculate True negatives we need a HashSet of all trajectories in the initial
 		//Dataset
-		HashSet<Integer> allTrajectories = CommonFunctions.getHashSetAllTrajectories(testTrajectoriesCVRR);
+		HashSet<Integer> allConsideredTrajectories = CommonFunctions.getHashSetAllTrajectories(workingTrajectories);
+
+		compareClusters(realClusters, testClusters, allConsideredTrajectories);
 		
-		compareClusters(realClusters, testClusters, allTrajectories);
+		//System.out.println("Inverted Output");
+		//compareClusters(testClusters, realClusters, allTrajectories);
 	}
 
 	
 
 	/**
 	 * @param minLins
-	 * @param testClusters
+	 * @param setOfClusterToPrint
 	 */
 	private static void printSetOfCluster(int minLins,
-			ArrayList<Cluster> testClusters, boolean isTraclus) {
+			ArrayList<Cluster> setOfClusterToPrint, boolean isTraclus) {
 		//To print Clusters - Refactor this
-		if(testClusters.isEmpty())
+		int totalTrajectories = 0;
+		
+		if(setOfClusterToPrint.isEmpty())
 		{
 			System.out.println("No clusters meet the parameters criteria");
 		}
 		else{
-			for(Cluster c: testClusters)
+			for(Cluster c: setOfClusterToPrint)
 			{
 				if(isTraclus)
 				c.calculateRepresentativeTrajectory(minLins, 0.00005);
 				//System.out.println("Cluster: " + c.getClusterID());
 				//System.out.println("Representative trajectory: " + c.getRepresentativeTrajectory().toString());
 				System.out.println("Cluster: " + c.toString());
+				totalTrajectories = totalTrajectories + c.elements.size();
 			}
+
+			System.out.println("Total Trajectories in Set of Clusters: " + totalTrajectories);
+			System.out.println("*************************************************");
 		}
 	}
 
@@ -378,6 +430,8 @@ public class testTrajectoryClustering {
 		float methodCoverage = 0;
 		float methodAccuracy = 0;
 		float methodFMeasure = 0;
+		
+		System.out.println("Considered trajectories: " + allTrajectories.size());
 		
 		int numClustersNotProducedByMethod = 0;
 		

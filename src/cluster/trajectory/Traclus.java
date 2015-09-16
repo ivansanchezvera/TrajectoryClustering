@@ -84,22 +84,15 @@ public class Traclus {
 	 * and using DTW as a distance (similarity metric).
 	 * @return
 	 */
-	public ArrayList<Cluster> executeDensityBasedClusterOverTrajectories(boolean simplifyTrajectories)
+	public ArrayList<Cluster> executeDensityBasedClusterOverTrajectories()
 	{
-		ArrayList<Trajectory> simplifiedTrajectories = null;
-		if(simplifyTrajectories)
-		{
-			simplifiedTrajectories = simplifyTrajectories(trajectories, false, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
-		}else{
-			simplifiedTrajectories = trajectories;
-		}
-		
+		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
 		long startTime = System.nanoTime();
 		
 		//For new Rao Approach, do clustering over trajectories.
 		//Form clustering over DTW
-		clusterOfTrajectories = clusterTrajectoriesWithDTW(simplifiedTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters);
+		clusterOfTrajectories = clusterTrajectoriesWithDTW(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters);
 		
 
 		long stopTime = System.nanoTime();
@@ -111,8 +104,9 @@ public class Traclus {
 	
 	public ArrayList<Cluster> executeKMeansClusterOverTrajectories(int k)
 	{
-		ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
+		//ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
 		
+		ArrayList<Trajectory> workingTrajectories = trajectories;
 		long startTime = System.nanoTime();
 		
 		//Export trajectories to visualize them
@@ -120,7 +114,7 @@ public class Traclus {
 		
 		//For new Rao Approach, do clustering over trajectories.
 		//Form clustering over DTW
-		clusterOfTrajectories = clusterTrajectoriesKMeans(simplifiedTrajectories, k);		
+		clusterOfTrajectories = clusterTrajectoriesKMeans(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
 		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
@@ -129,15 +123,10 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKMedoidsClusterOverTrajectories(int k,  boolean simplifyTrajectories) {
+	public ArrayList<Cluster> executeKMedoidsClusterOverTrajectories(int k) {
 
-		ArrayList<Trajectory> simplifiedTrajectories = null;
-		if(simplifyTrajectories)
-		{
-			simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
-		}else{
-			simplifiedTrajectories = trajectories;
-		}
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+		
 		
 		long startTime = System.nanoTime();
 		
@@ -145,7 +134,7 @@ public class Traclus {
 		//exportPlotableCoordinatesForAllTrajectories(simplifiedTrajectories);
 		
 		//Now we are trying to obtain centroids based in DTW metric and not in Euclideand Distance like K-Means
-		clusterOfTrajectories = clusterTrajectoriesKMedoids(simplifiedTrajectories, k);		
+		clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
 		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
@@ -154,23 +143,17 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKmeansDTW(int k, boolean simplifyTrajectories) {
-		
-		ArrayList<Trajectory> simplifiedTrajectories = null;
-		if(simplifyTrajectories)
-		{
-			simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
-		}else{
-			simplifiedTrajectories = trajectories;
-		}
-		
+	public ArrayList<Cluster> executeKmeansDTW(int k) {
+	
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+
 		long startTime = System.nanoTime();
-		
+
 		//Export trajectories to visualize them
 		//exportPlotableCoordinatesForAllTrajectories(simplifiedTrajectories);
 		
 		//Now we are trying to obtain centroids based in DTW metric and not in Euclideand Distance like K-Means
-		clusterOfTrajectories = clusterTrajectoriesKMeansDTW(simplifiedTrajectories, k);		
+		clusterOfTrajectories = clusterTrajectoriesKMeansDTW(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
 		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
@@ -180,16 +163,10 @@ public class Traclus {
 	}
 	
 
-	public ArrayList<Cluster> executeDBHApproximationOfClusterOverTrajectories(boolean simplifyTrajectories, int l, int numBits, float t1, float t2, int minNumElems, boolean merge, float mergeRatio)
+	public ArrayList<Cluster> executeDBHApproximationOfClusterOverTrajectories(int l, int numBits, int minNumElems, boolean merge, float mergeRatio)
 	{
-		ArrayList<Trajectory> simplifiedTrajectories = null;
-		if(simplifyTrajectories)
-		{
-			simplifiedTrajectories = simplifyTrajectories(trajectories, false, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
-		}else{
-			simplifiedTrajectories = trajectories;
-		}
-		
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+				
 		long startTime = System.nanoTime();
 		
 		//Export trajectories to visualize them
@@ -202,7 +179,7 @@ public class Traclus {
 			//clusterOfTrajectories = approximateClustersDBH(simplifiedTrajectories, l, numBits, t1, t2, minNumElems, merge, mergeRatio);
 			
 			//New corrected way as suggested by zay
-			clusterOfTrajectories = approximateClustersDBH(simplifiedTrajectories, l, numBits, minNumElems, merge, mergeRatio);
+			clusterOfTrajectories = approximateClustersDBH(workingTrajectories, l, numBits, minNumElems, merge, mergeRatio);
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

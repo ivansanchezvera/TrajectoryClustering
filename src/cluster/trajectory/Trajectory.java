@@ -207,6 +207,7 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		}
 		
 		Trajectory simplifiedTrajectory = new Trajectory(getTrajectoryId(), characteristicPointsFromTrajectory);
+		simplifiedTrajectory.setClusterIdPreLabel(this.getClusterIdPreLabel());
 		return simplifiedTrajectory;
 	}
 	
