@@ -74,13 +74,17 @@ public class Point implements Comparable<Point> {
 		return s;
 	}
 	
-	public String printToPlot() {
+	public String printToPlotOnMap() {
 		// TODO Auto-generated method stub
 		
 		//This one was for plotting in map
-		//String s = this.y + "," + this.x + "|";
-		
-		String s = this.y + "," + this.x;
+		String s = this.y + "," + this.x + "|";
+		return s;
+	}
+	
+	public String printToPlot() {
+		// TODO Auto-generated method stub
+		String s = this.x + "," + this.y;
 		return s;
 	}
 	

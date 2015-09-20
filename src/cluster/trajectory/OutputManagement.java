@@ -10,22 +10,31 @@ public class OutputManagement {
 	}
 	
 	//In the future add the option to give an export path
-	public static void ExportReducedTrajectories(String dataSetName, int numberOfPartitions)
+	public static void ExportReducedTrajectories(String path, String dataSetName, int numberOfPartitions)
 	{
 		String CVRRdatasetName = dataSetName;
-		ArrayList<Trajectory> trajectoriesFromInput = InputManagement.generateTestTrajectoriesFromDataSetCVRR(CVRRdatasetName);
+		ArrayList<Trajectory> trajectoriesFromInput = InputManagement.generateTestTrajectoriesFromDataSetCVRR(CVRRdatasetName, false, null);
 		
 		ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(trajectoriesFromInput, true, SegmentationMethod.douglasPeucker, numberOfPartitions);
 		
-		printSetOfTrajectories(simplifiedTrajectories);
+		printSetOfTrajectories(path, simplifiedTrajectories, true);
 		
 	}
 	
-	public static void printSetOfTrajectories(ArrayList<Trajectory> trajectories)
+	/**
+	 * Exports (Creates files) of a given set of trajectories in the given path.
+	 * @param path
+	 * @param trajectories
+	 * @param isSimplifiedTrajectory : Simplified has headers, non simplified nomrally don't require this (specially for plotting on map).
+	 */
+	public static void printSetOfTrajectories(String path, ArrayList<Trajectory> trajectories, boolean isSimplifiedTrajectory)
 	{
+		//First erase folder contents to be sure we only have what we want
+		extras.AuxiliaryFunctions.eraseFolderContents(path);
+		
 		for(Trajectory t: trajectories)
 		{
-			t.exportPlotableCoordinatesCSV();
+			t.exportPlotableCoordinatesCSV(path, isSimplifiedTrajectory);
 		}
 	}
 
@@ -35,6 +44,7 @@ public class OutputManagement {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String dataSetName = args[0];
+		String path = args[2];
 		
 		//This parameter must be an Integer
 		int numberOfPartitions = 0;
@@ -45,7 +55,7 @@ public class OutputManagement {
 			e.printStackTrace();
 		}
 		
-		ExportReducedTrajectories(dataSetName, numberOfPartitions);	
+		ExportReducedTrajectories(path, dataSetName, numberOfPartitions);	
 
 	}
 

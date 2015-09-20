@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -309,7 +310,7 @@ public class InputManagement {
 	}
 	
 	//For labeled dataset
-	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetCVRR(String dataset)
+	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetCVRR(String dataset, boolean isOriginSimplified, String originalDataset)
 	{
 		//String filePathToDataset = "C:\\Users\\ivan\\Documents\\Unimelb\\Big Project\\My work\\Datasets\\CVRR_dataset_trajectory_clustering";
 		
@@ -328,12 +329,26 @@ public class InputManagement {
 			try {
 				fileToUserFolder = GetPropertyValues.getPropValues(dataset);
 				ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(fileToUserFolder);
-
+				ArrayList<String> OriginalUserTrajectoryFiles = UserTrajectoryFiles;
+				
+				if(isOriginSimplified)
+				{
+					if(originalDataset!=null)
+					{
+					String  pathToOriginalDataset = GetPropertyValues.getPropValues(originalDataset);
+					OriginalUserTrajectoryFiles = CommonFunctions.listFilesForFolder(pathToOriginalDataset);
+					}else{
+						System.err.println("If using Simplified Trajectories as a source, " +
+								"Original Dataset is adviced in order to produce all the trajectories.");
+					}
+				}
 			
 			
 			// + "\\Trajectory"
+			//When Origin simplified, the truth that contains the labels does not exist.
+			int numFiles = (isOriginSimplified ? OriginalUserTrajectoryFiles.size()-1: UserTrajectoryFiles.size() - 1);
 			
-			int numFiles = UserTrajectoryFiles.size() - 1;
+			
 			
 			//Just to give different trajectories different trajectory Id
 			int idTrajectory = 0;
@@ -342,8 +357,17 @@ public class InputManagement {
 			{
 
 			
-			//Filename
-			String filename = fileToUserFolder + "\\trajectory" + i + ".csv";
+			//Simplified trajectories begin in index 0
+			String filename = "";
+			if(isOriginSimplified)
+			{
+				int simplifiedIndex = i-1;
+				filename = fileToUserFolder + "\\trajectory" + simplifiedIndex + ".csv";
+			}else{
+				filename = fileToUserFolder + "\\trajectory" + i + ".csv";
+			}
+			//Lets create a var for the label, to handle the output of simplified traj. 
+			int label = -1;
 			
 				//Set of points to make trajectory
 				ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
@@ -355,8 +379,27 @@ public class InputManagement {
 					
 					//Reading Lines and creating trajectories
 					String line;
+					
+					if(isOriginSimplified)
+					{						
+						line = reader.readLine();
+						String[] labelData = line.split(" ");
+						label = Integer.valueOf(labelData[1]);
+						
+						//One line is header, so lets throw it away
+						line = reader.readLine();
+					}
+					
 					while ((line = reader.readLine()) != null) {
 					       // process the line.
+						
+						//Simplified trajectories have extra data, so lets handle it
+						//Simplified trajectories contain label data in same file in 3rd field.
+						//Remember we needed to be able to read simplified trajectories from the exported files
+						//instead of the originals so we can keep the array structure for some clustering methods
+						//specially euclidean kmeans.
+
+						
 						//System.out.println("Trajectory Line: " + line);
 						String[] trajectoryPointData = line.split(",");
 						//System.out.println("Trajectory decomposed Line: " + trajectoryPointData);
@@ -392,23 +435,32 @@ public class InputManagement {
 						Point tr0p1 = new Point(x, y , null);
 						
 						listPointsTrajectory0.add(tr0p1);
-						}		
-					}catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
+						}	
+					
+					Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
+					tr0.setMDLPrecision((float) 0.00001);
+						
+					//Simplified trajectory files contain label in same file as traj.
+					if(isOriginSimplified)
+					{
+						tr0.setClusterIdPreLabel(label);
 					}
-				
-				Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
-				tr0.setMDLPrecision((float) 0.00001);
-				testTrajectories.add(tr0);
-				idTrajectory++;
+						
+					testTrajectories.add(tr0);
+					idTrajectory++;
+					
+				}catch (FileNotFoundException e) {
+					System.err.println("File does not exist: " + filename);
+					//e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 		}
-		
 
-			
-		//Now is time to label this bitches
+			//Now is time to label this bitches
 			//Filename
+		if(!isOriginSimplified)
+		{
 			String trajectoryLabelsfilename = fileToUserFolder + "\\truth.csv";
 		
 				BufferedReader reader;
@@ -438,11 +490,11 @@ public class InputManagement {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+				}
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			}
-
+			}	
 		return testTrajectories;
 	}
 	

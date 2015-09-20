@@ -246,7 +246,11 @@ public class Traclus {
 				Trajectory simplifiedTrajectory = t.simplifyTrajectoryDouglasPeucker(0, numberOfPartitions);
 				if(strict)
 				{
-					if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions+1)
+					//Number of partitions = number of points - 1
+					
+					//This was here before, for traclust I guess. Now we use number of points instead of number of segments.
+					//if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions+1)
+					if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions)
 					{
 					setOfSimplifiedTrajectories.add(simplifiedTrajectory);
 					
@@ -258,10 +262,11 @@ public class Traclus {
 					//interrupt();
 					//*****************End of Print trajectories****************
 					}else{
-						
-						System.out.println(error + " error is here in trajectory " + t.getTrajectoryId() + 
-								", num points in simplified trajectory: " + simplifiedTrajectory.getPoints().size());
 						error++;
+						System.out.println(error + ". Error could not convert trajectory " + t.getTrajectoryId() + 
+								" into the desired number of points. Needed number of points:  " + numberOfPartitions +
+								", num points in simplified trajectory: " + simplifiedTrajectory.getPoints().size());
+						
 						//interrupt();
 					}
 				}else{

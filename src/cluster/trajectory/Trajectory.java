@@ -5,6 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -517,7 +522,7 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		return toPrint;
 	}
 
-	public String printTrajectoryToCSV(){
+	public String printTrajectoryToCSVToPlotOnMap(){
 		String toPrint = "";
 		
 		toPrint = "latitude,longitude,trajectory";
@@ -527,7 +532,39 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 			toPrint = toPrint + "\n"+ p.printToPlotUTMToCoordinates()+ "," + getTrajectoryId();
 			}else
 			{
-			toPrint = toPrint + "\n"+ p.printToPlot() + "," + getTrajectoryId();
+			toPrint = toPrint + "\n"+ p.printToPlotOnMap() + "," + getTrajectoryId();
+			}
+		}
+		return toPrint;
+	}
+	
+	public String printTrajectoryToCSV(){
+		String toPrint = "";
+		
+		//toPrint = "longitude (x), latitude (y)";
+		for(Point p: points)
+		{
+			if(p.isUTM()){
+			toPrint = toPrint + p.printToPlotUTMToCoordinates();
+			}else
+			{
+			toPrint = toPrint + p.printToPlot() + "\n";
+			}
+		}
+		return toPrint;
+	}
+	
+	public String printSimplifiedTrajectoryToCSV(){
+		String toPrint = "";
+		toPrint = "Label: " + this.clusterIdPreLabel + "\n";
+		toPrint = toPrint + "longitude (x), latitude (y)\n";
+		for(Point p: points)
+		{
+			if(p.isUTM()){
+			toPrint = toPrint + p.printToPlotUTMToCoordinates() + "\n";
+			}else
+			{
+			toPrint = toPrint + p.printToPlot() + "\n";
 			}
 		}
 		return toPrint;
@@ -573,12 +610,31 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		}
 	}
 
-	public void exportPlotableCoordinatesCSV()
+	/**
+	 * Writes the trajectory into CSV format in the specified path.
+	 * Print header is for simplified trajectory, off for plotting in maps.
+	 * @param path
+	 * @param printHeadersAndLabel : Print headers and label, specially to handle simplified trajectories.
+	 */
+	public void exportPlotableCoordinatesCSV(String path, boolean printHeadersAndLabel) //throws IOException
 	{
 		try {
 			
-			String content = printTrajectoryToCSV();
-			String filename = "eTrajectory" + getTrajectoryId() + ".csv";
+			
+			String content = (printHeadersAndLabel?printSimplifiedTrajectoryToCSV():printTrajectoryToCSV());
+			String filename = "trajectory" + getTrajectoryId() + ".csv";
+			
+			//This is to verify that path exists
+			if(filename!=null)
+			{
+				Path p = Paths.get(path);
+				if(!Files.exists(p))
+				{
+					extras.AuxiliaryFunctions.createFolder(path);
+				}
+				
+				filename = path.concat(filename);
+			}
 			File file = new File(filename);
  
 			// if file doesnt exists, then create it

@@ -186,7 +186,7 @@ public class testTrajectoryClustering {
 			dataset = "CVRR_Dataset_Cross_Path";
 		}
 		
-		ArrayList<Trajectory> testTrajectoriesCVRR = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset);
+		//ArrayList<Trajectory> testTrajectoriesCVRR = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset);
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
@@ -198,10 +198,16 @@ public class testTrajectoryClustering {
 		
 		if(simplifyTrajectories)
 		{
-			ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(testTrajectoriesCVRR, strictSimplification, segmentationMethod, fixNumberPartitionSegment);
-			workingTrajectories = simplifiedTrajectories;
+			//ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(testTrajectoriesCVRR, strictSimplification, segmentationMethod, fixNumberPartitionSegment);
+			//workingTrajectories = simplifiedTrajectories;
+			
+			String path = System.getProperty("user.dir") + "\\Simplified points\\";
+			OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
+			String exported = "CVRR_Dataset_Exported";
+			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
+			
 		}else{
-			workingTrajectories = testTrajectoriesCVRR;
+			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
 		}
 			
 		if(method == ClusteringMethod.TRACLUS)
@@ -378,7 +384,7 @@ public class testTrajectoryClustering {
 		//to Plot clusters
 		if(plotTrajectories)
 		{
-			TrajectoryPlotter.drawAllClusters(testClusters);
+			TrajectoryPlotter.drawAllClusters(realClusters);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters);
 		}
 		//To calculate True negatives we need a HashSet of all trajectories in the initial

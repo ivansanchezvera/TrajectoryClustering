@@ -107,6 +107,7 @@ public class HashingFunction {
 	 * @return Double: value of hash.
 	 */
 	public double hash(Trajectory x) {
+				
 		double dts1 = Trajectory.calculateDTWDistance(x,x1);
 		double dts2 = Trajectory.calculateDTWDistance(x,x2);
 		
