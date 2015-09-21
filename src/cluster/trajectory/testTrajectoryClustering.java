@@ -3,6 +3,7 @@ import graphics.TrajectoryPlotter;
 
 import java.awt.color.CMMException;
 import java.io.*;
+import java.security.AlgorithmConstraints;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,14 +35,14 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION;
+		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION_DTW;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
 		boolean simplifyTrajectories = true;
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 9; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 20; //normal value = 8 //9 for tests with zay
 		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory);
 	}
 
@@ -166,7 +167,7 @@ public class testTrajectoryClustering {
 		float MLDPrecision = (float) 1;
 		boolean strictSimplification = true;
 		
-		if(method == ClusteringMethod.DBH_APPROXIMATION)
+		if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
 		{
 			strictSimplification = false;
 		}
@@ -236,7 +237,7 @@ public class testTrajectoryClustering {
 			testClusters = traclus.executeTraclus();
 		}
 		
-		if(method == ClusteringMethod.DBSCAN)
+		if(method == ClusteringMethod.DBSCAN_DTW)
 		{
 		segmentationMethod = SegmentationMethod.douglasPeucker;
 		//For Trajectory Partition using Douglas-Peucker
@@ -278,7 +279,7 @@ public class testTrajectoryClustering {
 		testClusters = traclus.executeKMeansClusterOverTrajectories(15);
 		}
 
-		if(method == ClusteringMethod.DBH_APPROXIMATION)
+		if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
 		{
 		segmentationMethod = SegmentationMethod.douglasPeucker;
 		//For Trajectory Partition using Douglas-Peucker
@@ -303,7 +304,7 @@ public class testTrajectoryClustering {
 		}
 		
 		//For K-Medoids
-		if(method == ClusteringMethod.KMEDOIDS)
+		if(method == ClusteringMethod.KMEDOIDS_DTW)
 		{
 		//Call KMedoids here
 			
@@ -326,7 +327,7 @@ public class testTrajectoryClustering {
 		}
 		
 		//For K-MeansDTW
-		if(method == ClusteringMethod.KMEANSDTW)
+		if(method == ClusteringMethod.KMEANS_DTW)
 		{
 		//Call KMedoids here
 			
@@ -345,6 +346,21 @@ public class testTrajectoryClustering {
 			
 			//For Kmeans for Whole trajectories
 			testClusters = traclus.executeKmeansDTW(k);
+			
+		}
+		
+		//For LSH Using Euclidean distance
+		if(method == ClusteringMethod.LSH_EUCLIDEAN)
+		{
+			//Parameters for Partition
+			double epsilonDouglasPeucker = 0.001;
+			
+			//Parameters for LSH
+			
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			
+			//For LSH EUCLIDEAN
+			testClusters = traclus.executeLSHEuclidean();
 			
 		}
 		
@@ -451,7 +467,14 @@ public class testTrajectoryClustering {
 			//true negatives(tni), i.e., the number of trajectories that do not belong to ci and they were
 			//correctly assigned to a cluster different from ci
 			
-			cb.calculateCardinality();
+			//cb.calculateCardinality();
+			
+			//Just for testing purposes
+			Cluster debugTestCluster = null;
+			Cluster debugRealCluster = null;
+			HashSet<Integer> commonDebug = new HashSet<Integer>();
+			HashSet<Integer> notInAnySetDebug = new HashSet<Integer>();
+			float totalElements = 0;
 			
 			for(Cluster ct: testSet)
 			{
@@ -464,6 +487,7 @@ public class testTrajectoryClustering {
 				{
 					commonElements = common.size();
 					equivalentIndex = ct.getClusterID();
+					cb.calculateCardinality();
 					falsePositives = ct.cardinality - commonElements;
 					falseNegatives = cb.cardinality - commonElements;
 					
@@ -475,11 +499,40 @@ public class testTrajectoryClustering {
 
 					trueNegatives = notInAnySet.size();
 					
+					//*****************************
+					//For Debugging
+					totalElements = commonElements + falseNegatives + falsePositives + trueNegatives;
+					//if(totalElements>allTrajectories.size())
+					if(falseNegatives>0)
+					{
+						cb.calculateCardinality();
+					//debugging variable
+					debugTestCluster = ct;
+					debugRealCluster = cb;
+					commonDebug.addAll(common);
+					notInAnySetDebug.addAll(notInAnySet);
+					}
+					//***************************
 				}
+				
+
 			}
 			
 			System.out.println("\n");
 			
+			totalElements = commonElements + falseNegatives + falsePositives + trueNegatives;
+			
+			if(totalElements>allTrajectories.size())
+			{
+				System.err.println("Bug is here, check this out.");
+				System.err.println("Total Elements: " + totalElements);
+				System.err.println("Real cluster trajectories number: " + allTrajectories.size());
+				System.err.println("Test Cluster: " + debugTestCluster.toStringComplete());
+				System.err.println("Real Cluster: " + debugRealCluster.toStringComplete());
+				System.err.println("Common Set: " + commonDebug);
+				System.err.println("Not in any Set: " + notInAnySetDebug);
+			}
+				
 			if(equivalentIndex>-1)
 			{
 			System.out.println("Real Cluster: " + cb.getClusterID() 
@@ -487,7 +540,8 @@ public class testTrajectoryClustering {
 					+ " Common Elements (TP): " + commonElements
 					+ " False Positives (FP): " + falsePositives
 					+ " False Negatives (FN): " + falseNegatives
-					+ " True Negatives  (TN): " + trueNegatives);
+					+ " True Negatives  (TN): " + trueNegatives
+					+ " Total Elements : " + totalElements);
 			
 			float purity = commonElements/(commonElements + falsePositives);
 			float coverage = commonElements/(commonElements + falseNegatives);

@@ -240,7 +240,6 @@ public class Cluster {
 	}
 
 	public int calculateCardinality() {
-		// TODO Auto-generated method stub
 		this.cardinality = 0;
 		for(Object o:elements)
 		{

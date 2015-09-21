@@ -196,6 +196,28 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
+	public ArrayList<Cluster> executeLSHEuclidean() {
+
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		try {
+
+			//clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, l, numBits);
+
+		} catch (Exception e) {
+			System.err.print(e.getMessage());
+			e.printStackTrace();
+		}
+		
+		long stopTime = System.nanoTime();
+		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
+	
+		return clusterOfTrajectories;
+	}
+	
 	//3 clear stages
 	//Partition Phase
 	//Input Set of Trajectories
@@ -1204,6 +1226,8 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
+
+	
 
 
 	
