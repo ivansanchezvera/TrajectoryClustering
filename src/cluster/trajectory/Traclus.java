@@ -73,7 +73,7 @@ public class Traclus {
 		
 
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
@@ -96,7 +96,7 @@ public class Traclus {
 		
 
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
@@ -117,7 +117,7 @@ public class Traclus {
 		clusterOfTrajectories = clusterTrajectoriesKMeans(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
@@ -137,7 +137,7 @@ public class Traclus {
 		clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
@@ -156,7 +156,7 @@ public class Traclus {
 		clusterOfTrajectories = clusterTrajectoriesKMeansDTW(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		return clusterOfTrajectories;
@@ -189,7 +189,7 @@ public class Traclus {
 		}
 		
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 		
 		
@@ -212,7 +212,7 @@ public class Traclus {
 		}
 		
 		long stopTime = System.nanoTime();
-		long finalTimeInSeconds = (stopTime - startTime)/1000000000;
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
 	
 		return clusterOfTrajectories;
@@ -254,6 +254,9 @@ public class Traclus {
 	 */
 	public static ArrayList<Trajectory> simplifyTrajectories(ArrayList<Trajectory> trajectories,boolean strict, SegmentationMethod segmentationMethod, int numberOfPartitions)
 	{
+		//Print time as Zay Requested
+		long startTime = System.nanoTime();
+		
 		ArrayList<Trajectory> setOfSimplifiedTrajectories = new ArrayList<Trajectory>();
 		int error = 0;
 		for(Trajectory t:trajectories)
@@ -272,7 +275,7 @@ public class Traclus {
 					
 					//This was here before, for traclust I guess. Now we use number of points instead of number of segments.
 					//if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions+1)
-					if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions)
+					if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions+1)
 					{
 					setOfSimplifiedTrajectories.add(simplifiedTrajectory);
 					
@@ -296,6 +299,11 @@ public class Traclus {
 				}
 			}
 		}
+		
+		//To print Time
+		long stopTime = System.nanoTime();
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
+		System.out.println("Trajectory Simplification Execution time in seconds: " + (finalTimeInSeconds));
 				
 		return setOfSimplifiedTrajectories;
 	}
