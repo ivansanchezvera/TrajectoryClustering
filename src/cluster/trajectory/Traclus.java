@@ -114,7 +114,7 @@ public class Traclus {
 		
 		//For new Rao Approach, do clustering over trajectories.
 		//Form clustering over DTW
-		clusterOfTrajectories = clusterTrajectoriesKMeans(workingTrajectories, k);		
+		clusterOfTrajectories = clusterTrajectoriesKMeansEuclidean(workingTrajectories, k);		
 		
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
@@ -196,7 +196,11 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeLSHEuclidean() {
+	/**
+	 * This Method calculates approximate clusters using LSH to project Euclidean Distance (L2 Norm).
+	 * @return Clusters
+	 */
+	public ArrayList<Cluster> executeLSHEuclidean(int numHashingFunctions, int windowSize) {
 
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -204,7 +208,7 @@ public class Traclus {
 		
 		try {
 
-			//clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, l, numBits);
+			clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, numHashingFunctions, windowSize);
 
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
@@ -487,7 +491,7 @@ public class Traclus {
 			//Initialize hash tables
 			for(int w=0; w<lkBitFunctions.size();w++)
 			{
-				HashTable ht = new HashTable(w, k);
+				HashTable ht = new HashTable(w, k, true);
 				hashTables.add(ht);
 			}
 			
@@ -517,7 +521,7 @@ public class Traclus {
 				//This requires recalculating the hashes
 				//hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
 					
-				hashTables.get(w).addAllToBucket(simplifiedTrajectories, tempCHF.execute(simplifiedTrajectories));
+				hashTables.get(w).addAllToBucketBooleanHash(simplifiedTrajectories, tempCHF.execute(simplifiedTrajectories));
 			}
 				
 			//Now create the clusters, this seems infeasible
@@ -717,7 +721,7 @@ public class Traclus {
 		//Initialize hash tables
 		for(int w=0; w<lkBitFunctions.size();w++)
 		{
-			HashTable ht = new HashTable(w, k);
+			HashTable ht = new HashTable(w, k, true);
 			hashTables.add(ht);
 		}
 		
@@ -811,7 +815,60 @@ public class Traclus {
 		return finalListClusterRepresentation;
 	}
 	
-	
+	//LSH HASHING
+	private ArrayList<Cluster> approximateClustersLSHEuclidean(ArrayList<Trajectory> workingTrajectories,
+			int numHashingFunctions, int windowSize) {
+
+		ArrayList<LocalitySensitiveHashing> allHashFunctions = new ArrayList<LocalitySensitiveHashing>();
+		ArrayList<Integer> trajectoryHashesLSH = new ArrayList<Integer>();
+		//Number of dimensions equal to double the number of points.
+		int dimensions = 2 * workingTrajectories.get(0).getPoints().size();	//obtain this from trajectory data
+		LocalitySensitiveHashing lsh = new LocalitySensitiveHashing(dimensions, numHashingFunctions, windowSize);
+
+		for(Trajectory t:workingTrajectories)
+		{
+			//Somehow Convert Trajectory to Double array, All of them need to have same lenght
+			int[] hash = lsh.generateHashes(t.getLocationDouble());
+			allHashFunctions.add(lsh);
+			
+			String integerInString = "";
+			for(int i=0; i<hash.length; i++)
+			{
+				integerInString.concat(Integer.toString(hash[i]));
+			}
+			
+			int addressInInteger = Integer.valueOf(integerInString);
+			trajectoryHashesLSH.add(addressInInteger);
+		}
+
+		//Here Hash
+		HashTable ht = new HashTable(0, numHashingFunctions, false);
+		
+		ht.addAllToBucketIntHash(workingTrajectories, trajectoryHashesLSH);
+		
+		//Now from hashes create Clusters, ask zay.
+		//My common representation of set of Clusters
+		ArrayList<Cluster> finalListClusterRepresentation = new ArrayList<Cluster>();
+		//Now transform to the common representation
+		int v = 0;
+		for(HashBucket hb:ht.buckets)
+		{
+			Cluster ct = new Cluster(v, "Cluster"+v);
+		
+			for(Integer id:hb.bucketElements)
+			{
+				ct.addElement(workingTrajectories.get(id));
+			}
+			
+			finalListClusterRepresentation.add(ct);
+			v++;
+		}
+		
+		//At the end, here, Clustering with DBScan DTW should be done inside each cluster
+		//and taking the biggest one (more elements) as the real one. This is only to get rid of noise (false positives)
+		
+		return finalListClusterRepresentation;
+	}
 	
 	//Clustering Phase
 	public ArrayList<Cluster> clusterSegments(ArrayList<Segment> setOfSegments, float eNeighborhoodParameter, int minLins, int cardinalityOfClusters)
@@ -1002,7 +1059,7 @@ public class Traclus {
 	 * @param k
 	 * @return
 	 */
-	private  ArrayList<Cluster> clusterTrajectoriesKMeans(ArrayList<Trajectory> simplifiedTrajectories, int k)
+	private  ArrayList<Cluster> clusterTrajectoriesKMeansEuclidean(ArrayList<Trajectory> simplifiedTrajectories, int k)
 	{
 		ArrayList<Cluster> kmeansClusters = new ArrayList<Cluster>();
 		

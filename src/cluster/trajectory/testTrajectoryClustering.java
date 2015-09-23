@@ -356,11 +356,13 @@ public class testTrajectoryClustering {
 			double epsilonDouglasPeucker = 0.001;
 			
 			//Parameters for LSH
+			int numHashingFunctions = 2;
+			int windowSize = 10;
 			
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
 			//For LSH EUCLIDEAN
-			testClusters = traclus.executeLSHEuclidean();
+			testClusters = traclus.executeLSHEuclidean(numHashingFunctions, windowSize);
 			
 		}
 		

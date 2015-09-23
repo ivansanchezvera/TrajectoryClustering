@@ -8,4 +8,5 @@ public class HashingFunctionLSH {
 		// TODO Auto-generated constructor stub
 	}
 
+	
 }

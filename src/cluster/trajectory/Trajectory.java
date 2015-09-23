@@ -695,6 +695,30 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		
 		return locations;
 	}
+	
+	/**
+	 * This function returns the points as a double array
+	 * With each x point followed by a y points. 
+	 * Vector contains all dimensions, so 2* number of points.
+	 * Similar to getLocation, but with doubles. 
+	 * Needed to calculate LSH Euclidean Clustering
+	 * @return
+	 */
+	public double[] getLocationDouble()
+	{
+		
+		double[] locations = new double[points.size()*2];
+		int i = 0;
+		for(Point p:points)
+		{
+			locations[i] = p.getX();
+			i++;
+			locations[i] = p.getY();
+			i++;
+		}
+		
+		return locations;
+	}
 
 	public int getClusterIdPreLabel() {
 		return clusterIdPreLabel;
