@@ -60,7 +60,7 @@ import java.util.zip.GZIPOutputStream;
 public class LocalitySensitiveHashing {
  
     private static String name = "lshHashFunctions.obj";
-    private int dimensions = 250;           // max d
+    private int dimensions = 20;           // max d
     public int numFunctionBundles = 50;     // k
  
     public double binLength = 10;           // w
@@ -237,7 +237,8 @@ public class LocalitySensitiveHashing {
             double[] functionBundle = hashFunctions[i];
  
             for (int j = 0; j < functionBundle.length; j++) {
-                functionBundle[j] = (float) (drawNumber() * dilation);
+            	double tempNumber = drawNumber();
+                functionBundle[j] = (float) (tempNumber * dilation);
             }
         }
  

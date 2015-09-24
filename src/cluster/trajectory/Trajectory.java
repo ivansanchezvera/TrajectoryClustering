@@ -82,7 +82,6 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		t.trajectoryUser = this.trajectoryUser;
 		t.validTrajectory = this.validTrajectory;
 		
-		
 		return t;
 		
 	}
@@ -727,6 +726,4 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	public void setClusterIdPreLabel(int clusterIdPreLabel) {
 		this.clusterIdPreLabel = clusterIdPreLabel;
 	}
-
-	
 }

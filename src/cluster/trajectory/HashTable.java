@@ -13,16 +13,14 @@ public class HashTable {
 		// TODO Auto-generated constructor stub
 		this.hashTableID = id;
 
-		if(isNumDigitsABoolNumber)
-		{
 		createBuckets(numDigits, isNumDigitsABoolNumber);
-		}
+
 	}
 	
 	private void createBuckets(int numDigits, boolean isNumDigitsABoolNumber) {
 		// TODO Auto-generated method stub
 		double possibleBuckets = (isNumDigitsABoolNumber ? Math.pow(2, numDigits) : Math.pow(10,numDigits));
-		possibleBuckets = Math.pow(2, numDigits);
+		//possibleBuckets = Math.pow(2, numDigits);
 		long roundedNumBuckets = Math.round(possibleBuckets);
 		
 		buckets.ensureCapacity((int) roundedNumBuckets);

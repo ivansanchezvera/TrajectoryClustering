@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -13,6 +14,7 @@ import cluster.trajectory.*;
 
 import com.stromberglabs.cluster.Clusterable;
 
+import extras.AuxiliaryFunctions;
 import fastdtw.com.dtw.DTW;
 
 
@@ -200,7 +202,7 @@ public class Traclus {
 	 * This Method calculates approximate clusters using LSH to project Euclidean Distance (L2 Norm).
 	 * @return Clusters
 	 */
-	public ArrayList<Cluster> executeLSHEuclidean(int numHashingFunctions, int windowSize) {
+	public ArrayList<Cluster> executeLSHEuclidean(int numHashingFunctions, int windowSize, int minNumElems) {
 
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -208,7 +210,7 @@ public class Traclus {
 		
 		try {
 
-			clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, numHashingFunctions, windowSize);
+			clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, numHashingFunctions, windowSize, minNumElems);
 
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
@@ -817,13 +819,17 @@ public class Traclus {
 	
 	//LSH HASHING
 	private ArrayList<Cluster> approximateClustersLSHEuclidean(ArrayList<Trajectory> workingTrajectories,
-			int numHashingFunctions, int windowSize) {
+			int numHashingFunctions, int windowSize, int minNumElems) {
 
 		ArrayList<LocalitySensitiveHashing> allHashFunctions = new ArrayList<LocalitySensitiveHashing>();
-		ArrayList<Integer> trajectoryHashesLSH = new ArrayList<Integer>();
+		ArrayList<String> trajectoryHashesLSH = new ArrayList<String>();
 		//Number of dimensions equal to double the number of points.
 		int dimensions = 2 * workingTrajectories.get(0).getPoints().size();	//obtain this from trajectory data
 		LocalitySensitiveHashing lsh = new LocalitySensitiveHashing(dimensions, numHashingFunctions, windowSize);
+		lsh.createHashFunctions();
+		
+		//Create HashMap(to represent a Hashtable).
+		HashMap<String, ArrayList<Trajectory>> allBuckets = new HashMap<String, ArrayList<Trajectory>>();
 
 		for(Trajectory t:workingTrajectories)
 		{
@@ -831,43 +837,50 @@ public class Traclus {
 			int[] hash = lsh.generateHashes(t.getLocationDouble());
 			allHashFunctions.add(lsh);
 			
-			String integerInString = "";
+			String bucketAddressInString = "";
 			for(int i=0; i<hash.length; i++)
 			{
-				integerInString.concat(Integer.toString(hash[i]));
+				bucketAddressInString = bucketAddressInString + Integer.toString(hash[i]);
 			}
 			
-			int addressInInteger = Integer.valueOf(integerInString);
-			trajectoryHashesLSH.add(addressInInteger);
+			//Now Store in HashMap (to represent a Hashtable).
+			if(allBuckets.containsKey(bucketAddressInString))
+			{
+				allBuckets.get(bucketAddressInString).add(t);
+			}else{
+				ArrayList<Trajectory> bucket = new ArrayList<Trajectory>();
+				bucket.add(t);
+				allBuckets.put(bucketAddressInString, bucket);
+			}
+			
+			trajectoryHashesLSH.add(bucketAddressInString);
 		}
+		
+		//For debugging only, print Map
+		System.err.println("*****************");
+		System.err.println("Print All Buckets");
+		AuxiliaryFunctions.printMap(allBuckets);
+		System.err.println("*****************");
 
-		//Here Hash
-		HashTable ht = new HashTable(0, numHashingFunctions, false);
-		
-		ht.addAllToBucketIntHash(workingTrajectories, trajectoryHashesLSH);
-		
-		//Now from hashes create Clusters, ask zay.
 		//My common representation of set of Clusters
 		ArrayList<Cluster> finalListClusterRepresentation = new ArrayList<Cluster>();
 		//Now transform to the common representation
 		int v = 0;
-		for(HashBucket hb:ht.buckets)
+		for(ArrayList<Trajectory> bucket:allBuckets.values())
 		{
 			Cluster ct = new Cluster(v, "Cluster"+v);
-		
-			for(Integer id:hb.bucketElements)
+			
+			for(Trajectory t: bucket)
 			{
-				ct.addElement(workingTrajectories.get(id));
+				ct.addElement(t);
 			}
 			
 			finalListClusterRepresentation.add(ct);
 			v++;
 		}
 		
-		//At the end, here, Clustering with DBScan DTW should be done inside each cluster
-		//and taking the biggest one (more elements) as the real one. This is only to get rid of noise (false positives)
-		
 		return finalListClusterRepresentation;
+
 	}
 	
 	//Clustering Phase
