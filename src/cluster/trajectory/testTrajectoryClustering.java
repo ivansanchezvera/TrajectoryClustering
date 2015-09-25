@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.lang.model.type.IntersectionType;
@@ -39,11 +40,26 @@ public class testTrajectoryClustering {
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
-		boolean simplifyTrajectories = true;
+		boolean simplifyTrajectories = false;
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
 		int numberOfPartitionsPerTrajectory = 9; //normal value = 8 //9 for tests with zay
+		
 		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory);
+		
+		//to evaluate the numbers of buckets produced by different numbers of hashing functions
+		/*
+		boolean plotHashFuntionsToNumBucketsGraph = true;
+		int maxIterations = 20;
+		int startingNumHashFunctions = 1;
+		
+		int totalHashesReached;
+		int maxTotalOfHashesToReach = 6;
+		do{
+		totalHashesReached = evaluateProduceNumOfClusters(method, trajectoryDataset, plotHashFuntionsToNumBucketsGraph, simplifyTrajectories, simplificationMethod, 
+				numberOfPartitionsPerTrajectory, maxIterations, startingNumHashFunctions);
+		}while(totalHashesReached<maxTotalOfHashesToReach);
+		*/
 	}
 
 	/**
@@ -151,14 +167,7 @@ public class testTrajectoryClustering {
 		
 		//Partition Parameters
 		//Default DP unless stated otherwise
-		SegmentationMethod segmentationMethod;
-		if(simplificationMethod == null)
-		{
-			segmentationMethod = SegmentationMethod.douglasPeucker;
-		}else{
-			segmentationMethod = simplificationMethod;
-		}
-		//SegmentationMethod segmentationMethod = SegmentationMethod.traclus;
+		SegmentationMethod segmentationMethod = (simplificationMethod==null? SegmentationMethod.douglasPeucker : simplificationMethod);
 		
 		//General Parameters, might be overwritten
 		float eNeighborhoodParameter = (float) 27;
@@ -167,49 +176,16 @@ public class testTrajectoryClustering {
 		float MLDPrecision = (float) 1;
 		boolean strictSimplification = true;
 		
-		if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
-		{
-			strictSimplification = false;
-		}
 		
-		//For CVRR trajectory data
-		//String CVRRdatasetName = "CSV Trajectories labomni";
-		//With new properties file it should be
+		String dataset = getDatasetVariable(trajectoryDataset);
 		
-		String dataset = null;
-		if(trajectoryDataset == TrajectoryDatasets.LABOMNI)
-		{
-			dataset = "CVRR_Dataset_Labomni_Path";
-		}
-		
-		if(trajectoryDataset == TrajectoryDatasets.CROSS)
-		{
-			dataset = "CVRR_Dataset_Cross_Path";
-		}
-		
-		//ArrayList<Trajectory> testTrajectoriesCVRR = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset);
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
 		//Before clustering, lets simplify trajectories if we have to.
 		//This have to be done here rather than in the clustering class to have a fair comparison.
-		ArrayList<Trajectory> workingTrajectories = new ArrayList<Trajectory>();
-		
-		
-		
-		if(simplifyTrajectories)
-		{
-			//ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(testTrajectoriesCVRR, strictSimplification, segmentationMethod, fixNumberPartitionSegment);
-			//workingTrajectories = simplifiedTrajectories;
-			
-			String path = System.getProperty("user.dir") + "\\Simplified points\\";
-			OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
-			String exported = "CVRR_Dataset_Exported";
-			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
-			
-		}else{
-			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
-		}
+		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories,
+				fixNumberPartitionSegment, dataset);
 			
 		if(method == ClusteringMethod.TRACLUS)
 		{
@@ -357,8 +333,8 @@ public class testTrajectoryClustering {
 			
 			//Parameters for LSH
 			int minNumElems = 1;
-			int numHashingFunctions = 1;
-			int windowSize = 10;
+			int numHashingFunctions = 10;
+			int windowSize = 1000;
 			
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
@@ -620,7 +596,13 @@ public class testTrajectoryClustering {
 		System.out.println("F-Measure: 	" +  methodFMeasure);
 		
 		//Now print Confusion Matrix
+		int lenghtOfRowLine = confusionMatrix.length();
 		confusionMatrix = confusionMatrix + "\n";
+		for(int j=0; j<lenghtOfRowLine; j++)
+		{
+			confusionMatrix = confusionMatrix + "--";
+		}
+		confusionMatrix = confusionMatrix + "-----\n";
 		char[] realClusterLegend = " Real Clusters".toCharArray();
 		
 		int legendIndex = 0;
@@ -647,5 +629,137 @@ public class testTrajectoryClustering {
 		System.out.println("Cells represent common elements between clusters.");
 		System.out.println("");		
 		System.out.println(confusionMatrix);
+	}
+	
+	//New experiments Rao
+	
+	/**
+	 * Method to evaluate how hashing functions perform and when the produced clusters decay.
+	 * @param method : The Clustering Method. Has to be a Hashing method (LSH or DBH)
+	 * @param trajectoryDataset
+	 * @param plotGraph
+	 * @param simplifyTrajectories
+	 * @param simplificationMethod
+	 * @param fixNumberPartitionSegment
+	 */
+	public static int evaluateProduceNumOfClusters(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
+			boolean plotGraph, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, int maxIterations, int startingNumHashFunctions)
+	{	
+		int numOfNonZeroClusters = -1;
+		int previousNumOfNonZeroClusters = -2;
+		int numIterations=0;
+		int numHashFunctions = startingNumHashFunctions;
+		
+		HashMap<Integer, Integer> hashesPerIteration = new HashMap<Integer, Integer>(); 
+		HashMap<Integer, Integer> minNumElemNon0ClusterPerIteration = new HashMap<Integer, Integer>(); 
+		
+		SegmentationMethod segmentationMethod = (simplificationMethod==null? SegmentationMethod.douglasPeucker : simplificationMethod);
+		String dataset = getDatasetVariable(trajectoryDataset);
+		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset);
+
+		do{
+		previousNumOfNonZeroClusters = numOfNonZeroClusters;
+		//Partition Parameters
+		//Default DP unless stated otherwise
+	
+		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
+				
+		//Before clustering, lets simplify trajectories if we have to.
+		//This have to be done here rather than in the clustering class to have a fair comparison.
+		TrajectoryClustering tc = new TrajectoryClustering(workingTrajectories);
+		int minNumElems = 1;
+		
+			if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
+			{
+				//Parameters only for DBH APPROXIMATION
+				int l = 1;
+				float mergeRatio = 1/2;
+				boolean merge = false;
+				
+				
+				testClusters = tc.executeDBHApproximationOfClusterOverTrajectories(l, numHashFunctions, minNumElems, merge, mergeRatio);
+				
+			}
+			
+			if(method == ClusteringMethod.LSH_EUCLIDEAN)
+			{
+				//Parameters for LSH
+				int windowSize = 500;
+
+				testClusters = tc.executeLSHEuclidean(numHashFunctions, windowSize, minNumElems);
+			}
+			
+			//For Minimun Number of Elements in a Cluster from a set of Clusters per Number of hash Functions
+			int minNumElementsCluster = Integer.MAX_VALUE;
+			for(Cluster c:testClusters)
+			{
+				if(c.elements.size()<minNumElementsCluster)
+				{
+					minNumElementsCluster = c.elements.size();
+				}
+			}
+			minNumElemNon0ClusterPerIteration.put(numHashFunctions, minNumElementsCluster);
+			//*********************
+			
+			numOfNonZeroClusters = testClusters.size();
+			//For total Number of Clusters in set of Clusters per Number of hash Functions
+			hashesPerIteration.put(numHashFunctions, numOfNonZeroClusters);
+			numHashFunctions++;
+			numIterations++;
+		}while(previousNumOfNonZeroClusters<numOfNonZeroClusters && numIterations<maxIterations);
+		
+		System.out.println("\n");
+		System.out.println("Hashing Functions -> Number of Non-Zero Clusters");
+		System.out.println(hashesPerIteration);
+		
+		System.out.println("\n");
+		System.out.println("Hashing Functions -> Minimun Number of Elements in a Cluster (Non-Zero Cluster)");
+		System.out.println(minNumElemNon0ClusterPerIteration);
+		
+		return hashesPerIteration.size();
+	}
+
+	/**
+	 * Gets the trajectories, as an ArrayList of trajectories.
+	 * @param simplifyTrajectories : Determine if trajectories are simplified
+	 * @param fixNumberPartitionSegment : Determines the number of partitions on each of the return trajectories
+	 * @param dataset : The dataset to work on
+	 * @return ArrayList of Trajectories.
+	 */
+	private static ArrayList<Trajectory> getTrajectories(boolean simplifyTrajectories,
+			int fixNumberPartitionSegment, String dataset) {
+		ArrayList<Trajectory> workingTrajectories;
+		if(simplifyTrajectories)
+		{
+			String path = System.getProperty("user.dir") + "\\Simplified points\\";
+			OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
+			String exported = "CVRR_Dataset_Exported";
+			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
+			
+		}else{
+			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
+		}
+		return workingTrajectories;
+	}
+
+	/**
+	 * This method returns the name of the Property value to lookup for the dataset path.
+	 * @param trajectoryDataset
+	 * @param dataset
+	 * @return
+	 */
+	private static String getDatasetVariable(TrajectoryDatasets trajectoryDataset) 
+	{
+		String dataset = "";
+		if(trajectoryDataset == TrajectoryDatasets.LABOMNI)
+		{
+			dataset = "CVRR_Dataset_Labomni_Path";
+		}
+		
+		if(trajectoryDataset == TrajectoryDatasets.CROSS)
+		{
+			dataset = "CVRR_Dataset_Cross_Path";
+		}
+		return dataset;
 	}
 }
