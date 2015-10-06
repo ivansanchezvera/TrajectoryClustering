@@ -229,7 +229,7 @@ public class LocalitySensitiveHashing {
             tmpB[k] = (float) (Math.random() * binLength);
         }
     	
-        //now the ramdom arrays
+        //now the random arrays
         LocalitySensitiveHashing.hashB = tmpB;
         double[][] hashFunctions = new double[numFunctionBundles][dimensions];
  

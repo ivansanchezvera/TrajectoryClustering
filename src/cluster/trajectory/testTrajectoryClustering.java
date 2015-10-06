@@ -36,11 +36,11 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION_DTW;
+		ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
-		boolean simplifyTrajectories = false;
+		boolean simplifyTrajectories = true;
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
 		int numberOfPartitionsPerTrajectory = 9; //normal value = 8 //9 for tests with zay
@@ -437,6 +437,8 @@ public class testTrajectoryClustering {
 		float methodCoverage = 0;
 		float methodAccuracy = 0;
 		float methodFMeasure = 0;
+		float baselineCardinality = 0;
+		float realClusterCardinality = 0;
 		
 		System.out.println("Considered trajectories: " + allTrajectories.size());
 		
@@ -456,6 +458,8 @@ public class testTrajectoryClustering {
 			float falsePositives=0;
 			float falseNegatives=0;
 			float trueNegatives=0;
+			
+			realClusterCardinality = cb.getElements().size();
 			//true negatives(tni), i.e., the number of trajectories that do not belong to ci and they were
 			//correctly assigned to a cluster different from ci
 			
@@ -569,10 +573,19 @@ public class testTrajectoryClustering {
 			System.out.println("Accuracy: 	" +  accuracy);
 			System.out.println("F-Measure:	" +  fMeasure);
 			
+			/*
 			methodPurity += purity;
 			methodCoverage += coverage;
 			methodAccuracy += accuracy;
-			methodFMeasure += fMeasure;
+			methodFMeasure += fMeasure;*/
+			
+			//New weighted score
+			methodPurity += (purity  * realClusterCardinality);
+			methodCoverage += (coverage * realClusterCardinality);
+			methodAccuracy += (accuracy * realClusterCardinality);
+			methodFMeasure += (fMeasure * realClusterCardinality);
+			baselineCardinality += realClusterCardinality;
+			
 			}else{
 				System.out.println("Real Cluster: " + cb.getClusterID() 
 						+ " Equivalent test Cluster: NONE");
@@ -583,10 +596,19 @@ public class testTrajectoryClustering {
 		
 		int sizeNormalizer = baselineSet.size() - numClustersNotProducedByMethod;
 		
+		/*
 		methodPurity = methodPurity/sizeNormalizer;
 		methodCoverage = methodCoverage/sizeNormalizer;
 		methodAccuracy = methodAccuracy/sizeNormalizer;
 		methodFMeasure = methodFMeasure/sizeNormalizer;
+		*/
+		
+		//For weighted score
+		methodPurity = methodPurity/baselineCardinality;
+		methodCoverage = methodCoverage/baselineCardinality;
+		methodAccuracy = methodAccuracy/baselineCardinality;
+		methodFMeasure = methodFMeasure/baselineCardinality;
+		
 		
 		System.out.println("\n");
 		System.out.println("Per Method Statistics: ");
