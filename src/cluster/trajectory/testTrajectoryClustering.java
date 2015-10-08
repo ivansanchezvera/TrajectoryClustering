@@ -36,7 +36,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
+		ClusteringMethod method = ClusteringMethod.KMEANS_DTW;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -439,6 +439,13 @@ public class testTrajectoryClustering {
 		float methodFMeasure = 0;
 		float baselineCardinality = 0;
 		float realClusterCardinality = 0;
+
+		//Mutual Information
+		float mutualInfo = 0;
+		float methodNormalizedMutualInfo = 0;
+		float entropyBaselineSet = 0;
+		boolean testSetEntropyCalculated = false;
+		float entropyTestSet = 0;
 		
 		System.out.println("Considered trajectories: " + allTrajectories.size());
 		
@@ -458,6 +465,10 @@ public class testTrajectoryClustering {
 			float falsePositives=0;
 			float falseNegatives=0;
 			float trueNegatives=0;
+		
+			//For Entropy in Normalized Mutual Information
+			float tempCBInfo = (float) cb.elements.size()/(float) allTrajectories.size();
+			entropyBaselineSet -= tempCBInfo * Math.log10(tempCBInfo)/Math.log10(2);
 			
 			realClusterCardinality = cb.getElements().size();
 			//true negatives(tni), i.e., the number of trajectories that do not belong to ci and they were
@@ -482,6 +493,20 @@ public class testTrajectoryClustering {
 				cb.calculateCardinality();
 				HashSet<Integer> common = cb.getParentTrajectories();
 				common.retainAll(ct.getParentTrajectories());
+				
+				//For Mutual Information
+				if(common.size()>0)
+				{
+					double tempLogEntropy = Math.log10((allTrajectories.size()*common.size())/((double)(cb.getElements().size()*ct.cardinality)))/Math.log10(2);
+					mutualInfo += ((double) common.size()/(double) allTrajectories.size())*tempLogEntropy;
+				}
+				
+				//For Entropy in Normalized Mutual Information
+				if(!testSetEntropyCalculated)
+				{
+					float tempCTInfo = (float) (ct.elements.size()/(float) allTrajectories.size());
+					entropyTestSet -= tempCTInfo * Math.log10(tempCTInfo)/Math.log10(2);
+				}
 				
 				//For Confusion Matrix
 				int intersection = 0;
@@ -523,6 +548,8 @@ public class testTrajectoryClustering {
 				//Also for Confusion Matrix
 				lineConfusionMatrix.add((int) (intersection));
 			}
+			//For Normalized Mutual Information
+			testSetEntropyCalculated = true;
 			
 			//For confusion Matrix
 			//Save label of test Cluster
@@ -609,6 +636,7 @@ public class testTrajectoryClustering {
 		methodAccuracy = methodAccuracy/baselineCardinality;
 		methodFMeasure = methodFMeasure/baselineCardinality;
 		
+		methodNormalizedMutualInfo = mutualInfo/((entropyBaselineSet+entropyTestSet)/2);
 		
 		System.out.println("\n");
 		System.out.println("Per Method Statistics: ");
@@ -616,6 +644,7 @@ public class testTrajectoryClustering {
 		System.out.println("Coverage: 	" +  methodCoverage);
 		System.out.println("Accuracy: 	" +  methodAccuracy);
 		System.out.println("F-Measure: 	" +  methodFMeasure);
+		System.out.println("Normalized Mutual Information (NMI): " +  methodNormalizedMutualInfo);
 		
 		//Now print Confusion Matrix
 		int lenghtOfRowLine = confusionMatrix.length();
