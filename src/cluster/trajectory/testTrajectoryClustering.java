@@ -388,11 +388,32 @@ public class testTrajectoryClustering {
 
 		compareClusters(realClusters, testClusters, allConsideredTrajectories);
 		
+		//Print Output for Zay to run other cluster statistics in Phyton
+		printTrajectoryLabels(testClusters);
+		
 		//System.out.println("Inverted Output");
 		//compareClusters(testClusters, realClusters, allTrajectories);
 	}
 
-	
+	/**
+	 * Print for each cluster, the truth and predicted cluster label
+	 * @param testClusters
+	 */
+	private static void printTrajectoryLabels(ArrayList<Cluster> testClusters) {
+		// TODO Auto-generated method stub
+		
+		System.out.println("****OUTPUT FOR ZAY, PYTHON CLUSTER QUALITY METRICS****");
+		System.out.println("Trajectory, True Cluster, Predicted Cluster");
+		for(Cluster c: testClusters)
+		{
+			for(Trajectory t: c.getElementsAsTrajectoryObjects())
+			{
+				System.out.println(t.getTrajectoryId() + ", " + t.getClusterIdPreLabel() + ", " + c.clusterID);
+			}
+		}
+	}
+
+
 
 	/**
 	 * @param minLins
