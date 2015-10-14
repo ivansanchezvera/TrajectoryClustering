@@ -14,20 +14,51 @@ public class Kmeans {
 	}
 	
 	public static Cluster[] execute(List<? extends Clusterable> trajectoryList, int k)
-	{
-		//Just to debug
-		//Print al trajectory dimensions
-		int i=0;
-		for(Clusterable c: trajectoryList)
-		{
-			Trajectory t = (Trajectory) c;
-		System.err.println("Trajectory: " + t.getTrajectoryId() + " index: " + i + " Points: " + t.elements.size());
-		i++;
-		}
-		
+	{	
 		KMeansClusterer kmeaner = new KMeansClusterer();
 		Cluster[] km = kmeaner.cluster(trajectoryList, k);
 		
 		return km;
+	}
+	
+	public static ArrayList<cluster.trajectory.Cluster> executeVectorKmeans(List<? extends Clusterable> elementsToCluster, ArrayList<Trajectory> trajectories, int k) throws Exception
+	{
+		ArrayList<cluster.trajectory.Cluster> kmeansClusters = new ArrayList<cluster.trajectory.Cluster>();
+		
+		//here call kmeans
+		com.stromberglabs.cluster.Cluster[] kmeansCluster = Kmeans.execute(elementsToCluster, k);
+		
+		for(com.stromberglabs.cluster.Cluster c:kmeansCluster)
+		{
+			cluster.trajectory.Cluster tempMyCluster = new cluster.trajectory.Cluster(c.getId(), "kmeans" + c.getId());
+			List<com.stromberglabs.cluster.Clusterable> items = c.getItems();
+			for(com.stromberglabs.cluster.Clusterable i: items)
+			{
+				Trajectory t;
+				if(i.getClass()== Trajectory.class)
+				{
+				t = (Trajectory) i;
+				}else{
+					if(i.getClass()==FeatureVector.class)
+					{
+						FeatureVector fv = (FeatureVector) i;
+						t = trajectories.get(fv.getId());
+						if(fv.getId()!=t.getTrajectoryId())
+						{
+							System.err.println("MegaFatal Error: Trajectory Id does not match the vector");
+							throw new Exception("MegaFatal Error: Trajectory Id does not match the vector");
+						}
+					}else{
+						t=null;
+						throw new Exception("Not a recognizable object to cast to Trajectory");
+					}
+				}
+				tempMyCluster.addElement(t);
+			}
+			tempMyCluster.calculateCardinality();
+			kmeansClusters.add(tempMyCluster);
+		}
+		
+		return kmeansClusters;
 	}
 }

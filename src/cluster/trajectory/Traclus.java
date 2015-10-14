@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +13,9 @@ import java.util.Random;
 
 import cluster.trajectory.*;
 
-import com.stromberglabs.cluster.Clusterable;
+//import com.stromberglabs.cluster.Cluster;
+//import com.stromberglabs.cluster.Clusterable;
+import com.stromberglabs.cluster.KMeansClusterer;
 
 import extras.AuxiliaryFunctions;
 import fastdtw.com.dtw.DTW;
@@ -224,6 +227,40 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
+	/**
+	 * LSH with sliding windows, where each segment from a trajectory inside the window is hashed into a feature vector.
+	 * @param numHashingFunctions
+	 * @param lshFunctionWindowSize : Parameter W of LSH Functions, not to be confused with the sliding window size.
+	 * @param minNumElems
+	 * @param slidingWindowSize : Size of the sliding window
+	 * @param k 
+	 * @return
+	 */
+	public ArrayList<Cluster> executeLSHEuclideanSlidingWindow(int numHashingFunctions, int lshFunctionWindowSize, int minNumElems, int slidingWindowSize, int k) 
+		{
+
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		try {
+
+			clusterOfTrajectories = approximateClustersLSHEuclideanWindowSize(workingTrajectories, numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k);
+
+		} catch (Exception e) {
+			System.err.print(e.getMessage());
+			e.printStackTrace();
+		}
+		
+		long stopTime = System.nanoTime();
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
+	
+		return clusterOfTrajectories;
+
+	}
+
+
 	//3 clear stages
 	//Partition Phase
 	//Input Set of Trajectories
@@ -315,10 +352,10 @@ public class Traclus {
 	}
 	
 	//Only to stop the flow of information in console
-	private void interrupt()
+	private void interrupt(int time)
 	{
 		try {
-			Thread.sleep(500);
+			Thread.sleep(time);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -818,6 +855,14 @@ public class Traclus {
 	}
 	
 	//LSH HASHING
+	/**
+	 * Approximation of clusters using LSH with Euclidean distance E2LSH
+	 * @param workingTrajectories
+	 * @param numHashingFunctions
+	 * @param windowSize
+	 * @param minNumElems
+	 * @return
+	 */
 	private ArrayList<Cluster> approximateClustersLSHEuclidean(ArrayList<Trajectory> workingTrajectories,
 			int numHashingFunctions, int windowSize, int minNumElems) {
 
@@ -857,10 +902,12 @@ public class Traclus {
 		}
 		
 		//For debugging only, print Map
+		/*
 		System.err.println("*****************");
 		System.err.println("Print All Buckets");
 		AuxiliaryFunctions.printMap(allBuckets);
 		System.err.println("*****************");
+		*/
 
 		//My common representation of set of Clusters
 		ArrayList<Cluster> finalListClusterRepresentation = new ArrayList<Cluster>();
@@ -881,6 +928,129 @@ public class Traclus {
 		
 		return finalListClusterRepresentation;
 
+	}
+
+	private ArrayList<Cluster> approximateClustersLSHEuclideanWindowSize(ArrayList<Trajectory> workingTrajectories, int numHashingFunctions,
+			int lshFunctionWindowSize, int minNumElems, int slidingWindowSize, int k) 
+		{
+		
+		ArrayList<LocalitySensitiveHashing> allHashFunctions = new ArrayList<LocalitySensitiveHashing>();
+		ArrayList<String> trajectoryHashesLSH = new ArrayList<String>();
+		//Number of dimensions equal to double the number of points.
+		//int dimensions = 2 * workingTrajectories.get(0).getPoints().size();	//obtain this from trajectory data
+		//int totalSlidingWindowsPerTrajectory = dimensions - slidingWindowSize + 1;
+		//slidingWindowEnhancedDimensions = slidingWindowEnhancedDimensions * slidingWindowSize
+		LocalitySensitiveHashing lsh = new LocalitySensitiveHashing(slidingWindowSize, numHashingFunctions, lshFunctionWindowSize);
+		lsh.createHashFunctions();
+		
+		//Create HashMap(to represent a Hashtable).
+		HashMap<String, ArrayList<Trajectory>> allBuckets = new HashMap<String, ArrayList<Trajectory>>();
+
+		ArrayList<ArrayList<String>> listOfWindowHashesPerEachTrajectory = new ArrayList<ArrayList<String>>();
+		for(Trajectory t:workingTrajectories)
+		{
+			//Convert trajectory in Vector
+			double[] trajectoryVector = t.getLocationDouble();
+			int totalSlidingWindowsPerTrajectory = trajectoryVector.length - slidingWindowSize + 1;
+			
+			ArrayList<String> hashBucketsPerTrajectory = new ArrayList<String>(); 
+			//Now the sliding window hashing
+			for(int i = 0; i < totalSlidingWindowsPerTrajectory; i++)
+			{
+				double[] windowVector = Arrays.copyOfRange(trajectoryVector, i, i+slidingWindowSize);
+				//**************This needs to be stored******************
+				int[] tempHash =  lsh.generateHashes(windowVector);
+				
+				String bucketAddressInString = "";
+				for(int j=0; j<tempHash.length; j++)
+				{
+					bucketAddressInString = bucketAddressInString + Integer.toString(tempHash[j]);
+					hashBucketsPerTrajectory.add(bucketAddressInString);
+				}
+				
+				if(allBuckets.containsKey(bucketAddressInString))
+				{
+					allBuckets.get(bucketAddressInString).add(t);
+				}else{
+					ArrayList<Trajectory> bucket = new ArrayList<Trajectory>();
+					bucket.add(t);
+					allBuckets.put(bucketAddressInString, bucket);
+				}
+			}
+			
+			listOfWindowHashesPerEachTrajectory.add(hashBucketsPerTrajectory);
+		}
+		
+		HashMap<String, FeatureVector> listOfFeatureVectorsPerTrajectory = new HashMap<String, FeatureVector>();
+
+		ArrayList<double[]> featureVectors = new ArrayList<double[]>();
+		
+		//Print All buckets produced by Sliding Window
+		System.out.println("*******Hash Buckets in Sliding Windows*********");
+		//extras.AuxiliaryFunctions.printMap(allBuckets);
+		//interrupt(15000);
+		System.out.println("Number of buckets: " + allBuckets.size());
+		System.out.println("*******End Hash Buckets in Sliding Windows*********");
+		
+		//Now create feature vectors
+		int o = 0;
+		for(String feature:allBuckets.keySet())
+		{
+			ArrayList<Trajectory> trajectoriesInBucket = allBuckets.get(feature);
+			
+			for(Trajectory t: workingTrajectories)
+			{
+					if(listOfFeatureVectorsPerTrajectory.containsKey(Integer.toString(t.getTrajectoryId())))
+					{
+						if(trajectoriesInBucket.contains(t))
+						{
+							listOfFeatureVectorsPerTrajectory.get(Integer.toString(t.getTrajectoryId())).features.add((float) 1);
+						}else{
+							listOfFeatureVectorsPerTrajectory.get(Integer.toString(t.getTrajectoryId())).features.add((float) 0);
+						}
+					}else{
+						FeatureVector fv = new FeatureVector(t.getTrajectoryId());
+						if(trajectoriesInBucket.contains(t))
+						{
+							fv.features.add((float) 1);
+						}else{
+							fv.features.add((float) 0);
+						}
+						listOfFeatureVectorsPerTrajectory.put(Integer.toString(t.getTrajectoryId()), fv);
+					}
+			}
+			System.out.println("Bucket #:" + o + " Bucket key (feature): " + feature);
+			o++;
+		}
+		
+		//Print All buckets
+		System.out.println("*******FeatureVectors in Sliding Windows*********");
+		extras.AuxiliaryFunctions.printMap(listOfFeatureVectorsPerTrajectory);
+		interrupt(15000);
+		System.out.println("*******End FeatureVectors in Sliding Windows*********");
+		
+		//Now cluster
+		//for( lfvt:listOfFeatureVectorsPerTrajectory)
+		
+		ArrayList<FeatureVector> AllFeatureVectors = new ArrayList<FeatureVector>(listOfFeatureVectorsPerTrajectory.values()); 
+		
+		//Use KMeans
+		ArrayList<Cluster> kmeansClusters = null;
+		try {
+			kmeansClusters = Kmeans.executeVectorKmeans(AllFeatureVectors, workingTrajectories, k);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+		return kmeansClusters;
+		
+		/*
+		//For debugging only, print Map
+		System.err.println("*****************");
+		System.err.println("Print All Buckets");
+		AuxiliaryFunctions.printMap(allBuckets);
+		System.err.println("*****************");
+		*/		
 	}
 	
 	//Clustering Phase
@@ -1074,24 +1244,14 @@ public class Traclus {
 	 */
 	private  ArrayList<Cluster> clusterTrajectoriesKMeansEuclidean(ArrayList<Trajectory> simplifiedTrajectories, int k)
 	{
-		ArrayList<Cluster> kmeansClusters = new ArrayList<Cluster>();
 		
-		//here call kmeans
-		com.stromberglabs.cluster.Cluster[] kmeansCluster = Kmeans.execute(simplifiedTrajectories, k);
-		
-		for(com.stromberglabs.cluster.Cluster c:kmeansCluster)
-		{
-			ClusterTrajectories tempMyCluster = new ClusterTrajectories(c.getId(), "kmeans" + c.getId());
-			List<Clusterable> items = c.getItems();
-			for(Clusterable i: items)
-			{
-				Trajectory t = (Trajectory) i; 
-				tempMyCluster.addTrajectory(t);
-			}
-			tempMyCluster.calculateCardinality();
-			kmeansClusters.add(tempMyCluster);
+		ArrayList<Cluster> kmeansClusters = null;
+		try {
+			kmeansClusters = Kmeans.executeVectorKmeans(simplifiedTrajectories, simplifiedTrajectories, k);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
 		}
-		
 		return kmeansClusters;
 	}
 
@@ -1304,6 +1464,7 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
+
 
 	
 

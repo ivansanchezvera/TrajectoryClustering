@@ -36,7 +36,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.KMEANS_DTW;
+		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -343,6 +343,25 @@ public class testTrajectoryClustering {
 			
 		}
 		
+		//For LSH Using Euclidean distance
+		if(method == ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN)
+		{
+			//Parameters for Partition
+			double epsilonDouglasPeucker = 0.001;
+			
+			//Parameters for LSH
+			int minNumElems = 1;
+			int numHashingFunctions = 5;
+			int lshFunctionWindowSize = 100;
+			int	slidingWindowSize = 3;
+			int k = 15; //At the end we do K-Means over the feature vectors
+			
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			
+			//For LSH EUCLIDEAN
+			testClusters = traclus.executeLSHEuclideanSlidingWindow(numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k);
+			
+		}
 		
 		//PrintReal Cluster Data
 		ArrayList<Cluster> realClusters = new ArrayList<Cluster>();
@@ -379,7 +398,7 @@ public class testTrajectoryClustering {
 		//to Plot clusters
 		if(plotTrajectories)
 		{
-			TrajectoryPlotter.drawAllClusters(realClusters);
+			TrajectoryPlotter.drawAllClusters(testClusters);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters);
 		}
 		//To calculate True negatives we need a HashSet of all trajectories in the initial
