@@ -305,17 +305,19 @@ public class Traclus {
 		for(Trajectory t:trajectories)
 		{
 			//System.out.println(t.printSummary());
-			if(t.getTrajectoryId()==193)
-			{
-				System.out.println("Stop, something is happening here!");
-			}
 			
+			//System.out.println("Trajectory: " + t.getTrajectoryId());
 			if(segmentationMethod == SegmentationMethod.douglasPeucker)
 			{
 			//For Douglas-Peucker simplification of trajectories
 				//Trajectory simplifiedTrajectory = t.simplifyTrajectoryDouglasPeucker(epsilonDouglasPeucker, fixedNumOfTrajectoryPartitionsDouglas);
 				//Epsilon is 0 cause we dont care about it, just about the number of points and not an approximate threshold like epsilon.
 				Trajectory simplifiedTrajectory = t.simplifyTrajectoryDouglasPeucker(0, numberOfPartitions);
+				
+				//Print just to Check (Debug)
+				//TODO Add this to debug log
+				//System.out.println("Simplified Trajectory " + simplifiedTrajectory.getTrajectoryId() + " Points: " + simplifiedTrajectory.getPoints().size());
+				
 				if(strict)
 				{
 					//Number of partitions = number of points - 1
@@ -1467,14 +1469,7 @@ public class Traclus {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
 
-
-	
-
-
-	
 	//Calculate Representative Trajectories.
 	//This step is done in each individual cluster, so it is in the cluster class.
 	
-	
-
 }

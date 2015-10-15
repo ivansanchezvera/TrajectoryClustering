@@ -37,7 +37,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
+		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -48,10 +48,10 @@ public class testTrajectoryClustering {
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 3; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 30; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
-		boolean veryBigData = true;
+		boolean veryBigData = false;
 		int numTrajectoryBigDataset = 500;
 		
 		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, printOutputZay, printConfusionMatrix, printDetailedClusters);

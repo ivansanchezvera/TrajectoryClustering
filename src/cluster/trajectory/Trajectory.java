@@ -239,6 +239,13 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	            }
 	        }
 	        
+	       //To correct errors when line is flat and furthest point gets stuck in 0 forever
+	       if(furthestPointIndex==0 && points.size()>2)
+	       {
+	    	   furthestPointIndex = (points.size()-1)/2;
+	       }
+	        
+	       Point middlePoint = points.get(furthestPointIndex);
 	       //minPoints--;
 	        
 	        if(minPoints==points.size())
@@ -248,7 +255,7 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	            return remainingPointsList;
 	        }
 	        
-	        if (minPoints>1 && furthestPointDistance > epsilon ) //furthestPointDistance > epsilon //Check why this is needed, it shouldnt be 
+	        if (minPoints>1) //furthestPointDistance > epsilon //Check why this is needed, it shouldnt be 
 	        {
 	        	int remainingPoints = minPoints/2;
 	        	int otherRemainingPoints = minPoints - remainingPoints;
@@ -332,9 +339,137 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	        } else {
 	        	List<Point> tempPointsList = line.asList();
 	        	ArrayList<Point> remainingPointsList = new ArrayList<Point>(tempPointsList);
+	        	//ArrayList<Point> remainingPointsList = new ArrayList<Point>();
+	        	//remainingPointsList.add(tempPointsList.get(0));
 	            return remainingPointsList;
 	        }
 	}
+	
+	/*
+	 * before correction of code 16-Oct-2015
+	
+	public ArrayList<Point> findCharacteristicPointsDouglasPeucker(List<Point> points, double epsilon, int minPoints)
+	{
+		 if (epsilon < 0) {
+	            throw new IllegalArgumentException("Epsilon cannot be less then 0.");
+	        }
+	        double furthestPointDistance = 0.0;
+	        int furthestPointIndex = 0;
+	        Segment line = new Segment(points.get(0), points.get(points.size() - 1));
+	        for (int i = 1; i < points.size() - 1; i++) {
+	            double distance = line.perpedicularDistanceToPoint(points.get(i));
+	            if (distance > furthestPointDistance ) {
+	                furthestPointDistance = distance;
+	                furthestPointIndex = i;
+	            }
+	        }
+	        
+	       Point middlePoint = points.get(furthestPointIndex);
+	       //minPoints--;
+	        
+	        if(minPoints==points.size())
+	        {
+	        	ArrayList<Point> remainingPointsList = new ArrayList<Point>();
+	        	remainingPointsList.addAll(points);
+	            return remainingPointsList;
+	        }
+	        
+	        if (minPoints>1 && furthestPointDistance > epsilon ) //furthestPointDistance > epsilon //Check why this is needed, it shouldnt be 
+	        {
+	        	int remainingPoints = minPoints/2;
+	        	int otherRemainingPoints = minPoints - remainingPoints;
+	        	
+	        	//Check that size will produce correct number of points
+	        	int pointsToTheLeft = furthestPointIndex+1;
+	        	int pointsToTheRight = points.size() - furthestPointIndex;
+	        	
+	        	ArrayList<Point> reduced1 = null;
+	        	ArrayList<Point> reduced2 = null;
+	        	
+	        	if(pointsToTheLeft>remainingPoints && pointsToTheRight>otherRemainingPoints)
+	        	{
+		        	//why furthest points + 1, it is because second parameter in non inclusive, so it captures up to furthest point, this is correct
+ 		            reduced1 = findCharacteristicPointsDouglasPeucker(points.subList(0, furthestPointIndex+1), epsilon, remainingPoints);
+		            reduced2 = findCharacteristicPointsDouglasPeucker(points.subList(furthestPointIndex, points.size()), epsilon, otherRemainingPoints);
+		
+	        	}else
+	        	{
+	        		int balancePointsLeft = pointsToTheLeft - remainingPoints;
+	        		int balancePointsRight = pointsToTheRight - otherRemainingPoints;
+	        		
+	        		if(balancePointsLeft==0 || balancePointsRight-balancePointsLeft>0)
+	        		{
+	        			balancePointsRight++;
+	        			balancePointsLeft--;
+	        		}
+	        		
+	        		if(balancePointsRight==0 || balancePointsLeft - balancePointsRight>0)
+	        		{
+	        			balancePointsLeft++;
+	        			balancePointsRight--;
+	        		}
+	        		
+ 	        		if(balancePointsLeft>0 && balancePointsRight<=0)
+	        		{
+	        			if(balancePointsLeft + balancePointsRight>=0)
+	        			{
+	        				reduced1 = findCharacteristicPointsDouglasPeucker(points.subList(0, furthestPointIndex+1), epsilon, (remainingPoints + Math.abs(balancePointsRight)));
+	    		            reduced2 = findCharacteristicPointsDouglasPeucker(points.subList(furthestPointIndex, points.size()), epsilon, pointsToTheRight);
+	        			}else{
+	        				
+	        				int finalPointsToTheLeft = remainingPoints + balancePointsLeft;
+	        				int finalPointsToTheRight = otherRemainingPoints - balancePointsLeft;
+	        				reduced1 = findCharacteristicPointsDouglasPeucker(points.subList(0, furthestPointIndex+1), epsilon, finalPointsToTheLeft);
+	    		            reduced2 = findCharacteristicPointsDouglasPeucker(points.subList(furthestPointIndex, points.size()), epsilon, finalPointsToTheRight);
+	        			}
+	        		}
+	        		
+	        		if(balancePointsRight>0 && balancePointsLeft<=0)
+	        		{
+	        			if(balancePointsLeft + balancePointsRight>=0)
+	        			{
+	        				reduced1 = findCharacteristicPointsDouglasPeucker(points.subList(0, furthestPointIndex+1), epsilon, pointsToTheLeft);
+	    		            reduced2 = findCharacteristicPointsDouglasPeucker(points.subList(furthestPointIndex, points.size()), epsilon, (otherRemainingPoints + Math.abs(balancePointsLeft)));
+	        			}else{
+	        				int finalPointsToTheLeft = remainingPoints - balancePointsRight;
+	        				int finalPointsToTheRight = otherRemainingPoints + balancePointsRight;
+	        				reduced1 = findCharacteristicPointsDouglasPeucker(points.subList(0, furthestPointIndex+1), epsilon, finalPointsToTheLeft);
+	    		            reduced2 = findCharacteristicPointsDouglasPeucker(points.subList(furthestPointIndex, points.size()), epsilon, finalPointsToTheRight);
+	        			}
+	        		}        			        		
+	        	}
+	        	
+	        	For Debugging only!!!
+	        	if(minPoints == 14 || minPoints == 7)
+	        	{
+	        		System.out.print("Here!");
+	        		System.out.print("Check");
+	        	}
+	        	
+	            ArrayList<Point> result = new ArrayList<Point>(reduced1);
+	            if(reduced2.size()>1)
+	            {
+	            	result.addAll(reduced2.subList(1, reduced2.size()));
+	            }else
+	            {
+	            	result.addAll(reduced2);
+	            }
+	            return result;
+	        } else {
+	        	List<Point> tempPointsList = line.asList();
+	        	ArrayList<Point> remainingPointsList = new ArrayList<Point>(tempPointsList);
+	        	//ArrayList<Point> remainingPointsList = new ArrayList<Point>();
+	        	//remainingPointsList.add(tempPointsList.get(0));
+	            return remainingPointsList;
+	        }
+	}
+	*/
+	
+	/**
+	 * 
+	 * @param characteristicSegmentsFromTrajectory
+	 * @param characteristicPointsFromTrajectory
+	 */
 	
 	//LSH over trajectories reduce by douglas peucker algorithm
 	private void LSH(ArrayList<Segment> characteristicSegmentsFromTrajectory, ArrayList<Point> characteristicPointsFromTrajectory)
