@@ -17,6 +17,7 @@ import java.util.HashSet;
 import javax.lang.model.type.IntersectionType;
 
 import dataset.TrajectoryDatasets;
+import extras.AuxiliaryFunctions;
 
 
 public class testTrajectoryClustering {
@@ -36,22 +37,22 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.KMEDOIDS_DTW;
+		ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
 		boolean simplifyTrajectories = true;
 		boolean printDetailedClusters = false;
-		boolean printOutputZay = false;
+		boolean printOutputZay = true;
 		boolean printConfusionMatrix = false;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 9; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 3; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
 		boolean veryBigData = true;
-		int numTrajectoryBigDataset = 250;
+		int numTrajectoryBigDataset = 500;
 		
 		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, printOutputZay, printConfusionMatrix, printDetailedClusters);
 		
@@ -368,7 +369,7 @@ public class testTrajectoryClustering {
 			int minNumElems = 1;
 			int numHashingFunctions = 5;
 			int lshFunctionWindowSize = 100;
-			int	slidingWindowSize = 3;
+			int	slidingWindowSize = 4;
 			int k = 15; //At the end we do K-Means over the feature vectors
 			
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
@@ -439,17 +440,26 @@ public class testTrajectoryClustering {
 	 * @param testClusters
 	 */
 	private static void printTrajectoryLabels(ArrayList<Cluster> testClusters) {
-		// TODO Auto-generated method stub
-		
-		System.out.println("****OUTPUT FOR ZAY, PYTHON CLUSTER QUALITY METRICS****");
-		System.out.println("Trajectory, True Cluster, Predicted Cluster");
+		System.out.println();
+		String zayOutput = "****OUTPUT FOR ZAY, PYTHON CLUSTER QUALITY METRICS****\n";
+		zayOutput = zayOutput + "Trajectory, True Cluster, Predicted Cluster\n";
 		for(Cluster c: testClusters)
 		{
 			for(Trajectory t: c.getElementsAsTrajectoryObjects())
 			{
-				System.out.println(t.getTrajectoryId() + ", " + t.getClusterIdPreLabel() + ", " + c.clusterID);
+				zayOutput = zayOutput + t.getTrajectoryId() + ", " + t.getClusterIdPreLabel() + ", " + c.clusterID + "\n";
 			}
 		}
+		System.out.println(zayOutput);
+		String path;
+		try {
+			path = extras.GetPropertyValues.getPropValues("Zay_Output_Exported");
+			AuxiliaryFunctions.printStringToFile(zayOutput, "OutputForZay.txt", path);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 
@@ -878,8 +888,10 @@ public class testTrajectoryClustering {
 		}
 		
 		//For debugging Only
+		/*
 		System.out.println("**********BIG DATASET*********");
 		System.out.println(workingTrajectories);
+		*/
 		
 		return workingTrajectories;
 	}

@@ -1,7 +1,9 @@
 package extras;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,6 +84,40 @@ public class AuxiliaryFunctions {
 	        if (file.isDirectory()) purgeDirectory(file);
 	        file.delete();
 	    }
+	}
+	
+	public static void printStringToFile(String textToPrint, String filename, String path)
+	{
+		try {
+			
+			//This is to verify that path exists
+			String completeFilename = "";
+			if(filename!=null)
+			{
+				Path p = Paths.get(path);
+				if(!Files.exists(p))
+				{
+					extras.AuxiliaryFunctions.createFolder(path);
+				}
+				
+				completeFilename = path.concat(filename);
+			}
+			
+			File file = new File(completeFilename);
+ 
+			// if file doesnt exists, then create it
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+ 
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write(textToPrint);
+			bw.close();
+  
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**

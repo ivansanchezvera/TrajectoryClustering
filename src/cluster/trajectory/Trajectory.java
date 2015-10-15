@@ -241,8 +241,15 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	        
 	       //minPoints--;
 	        
-	        if (furthestPointDistance > epsilon && minPoints>1) {
-	        	
+	        if(minPoints==points.size())
+	        {
+	        	ArrayList<Point> remainingPointsList = new ArrayList<Point>();
+	        	remainingPointsList.addAll(points);
+	            return remainingPointsList;
+	        }
+	        
+	        if (minPoints>1 && furthestPointDistance > epsilon ) //furthestPointDistance > epsilon //Check why this is needed, it shouldnt be 
+	        {
 	        	int remainingPoints = minPoints/2;
 	        	int otherRemainingPoints = minPoints - remainingPoints;
 	        	
@@ -314,7 +321,13 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	        	}
 	        	 */
 	            ArrayList<Point> result = new ArrayList<Point>(reduced1);
-	            result.addAll(reduced2.subList(1, reduced2.size()));
+	            if(reduced2.size()>1)
+	            {
+	            	result.addAll(reduced2.subList(1, reduced2.size()));
+	            }else
+	            {
+	            	result.addAll(reduced2);
+	            }
 	            return result;
 	        } else {
 	        	List<Point> tempPointsList = line.asList();

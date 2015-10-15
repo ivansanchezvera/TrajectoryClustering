@@ -305,6 +305,10 @@ public class Traclus {
 		for(Trajectory t:trajectories)
 		{
 			//System.out.println(t.printSummary());
+			if(t.getTrajectoryId()==193)
+			{
+				System.out.println("Stop, something is happening here!");
+			}
 			
 			if(segmentationMethod == SegmentationMethod.douglasPeucker)
 			{
@@ -316,7 +320,7 @@ public class Traclus {
 				{
 					//Number of partitions = number of points - 1
 					
-					//This was here before, for traclust I guess. Now we use number of points instead of number of segments.
+					//This was here before, for traclus I guess. Now we use number of points instead of number of segments.
 					//if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions+1)
 					if(simplifiedTrajectory.getPoints().size()>=numberOfPartitions+1)
 					{
@@ -333,7 +337,8 @@ public class Traclus {
 						error++;
 						System.out.println(error + ". Error could not convert trajectory " + t.getTrajectoryId() + 
 								" into the desired number of points. Needed number of points:  " + numberOfPartitions +
-								", num points in simplified trajectory: " + simplifiedTrajectory.getPoints().size());
+								", num points in simplified trajectory: " + simplifiedTrajectory.getPoints().size() +
+								", num points in original trajectory: " + t.getPoints().size());
 						
 						//interrupt();
 					}
@@ -946,7 +951,6 @@ public class Traclus {
 		//Create HashMap(to represent a Hashtable).
 		HashMap<String, ArrayList<Trajectory>> allBuckets = new HashMap<String, ArrayList<Trajectory>>();
 
-		ArrayList<ArrayList<String>> listOfWindowHashesPerEachTrajectory = new ArrayList<ArrayList<String>>();
 		for(Trajectory t:workingTrajectories)
 		{
 			//Convert trajectory in Vector
@@ -977,8 +981,6 @@ public class Traclus {
 					allBuckets.put(bucketAddressInString, bucket);
 				}
 			}
-			
-			listOfWindowHashesPerEachTrajectory.add(hashBucketsPerTrajectory);
 		}
 		
 		HashMap<String, FeatureVector> listOfFeatureVectorsPerTrajectory = new HashMap<String, FeatureVector>();
@@ -1026,7 +1028,7 @@ public class Traclus {
 		//Print All buckets
 		System.out.println("*******FeatureVectors in Sliding Windows*********");
 		extras.AuxiliaryFunctions.printMap(listOfFeatureVectorsPerTrajectory);
-		interrupt(15000);
+		//interrupt(15000);
 		System.out.println("*******End FeatureVectors in Sliding Windows*********");
 		
 		//Now cluster
