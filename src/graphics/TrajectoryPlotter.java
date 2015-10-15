@@ -66,7 +66,9 @@ public class TrajectoryPlotter {
 		for(int i = 0; i<setOfClustersDatasets.size(); i++)
 		{
 			int previousChartIndex = plot.getSeriesCount();
-			System.out.println("Trajectories so far: " + previousChartIndex);
+			
+			//For Debug only
+			//System.out.println("Trajectories so far: " + previousChartIndex);
 
 			plot.setDataset(i, (XYDataset) setOfClustersDatasets.get(i));
 			

@@ -36,16 +36,24 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN;
+		ClusteringMethod method = ClusteringMethod.KMEDOIDS_DTW;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
 		boolean simplifyTrajectories = true;
+		boolean printDetailedClusters = false;
+		boolean printOutputZay = false;
+		boolean printConfusionMatrix = false;
+		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
 		int numberOfPartitionsPerTrajectory = 9; //normal value = 8 //9 for tests with zay
 		
-		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory);
+		//For big data Experiment
+		boolean veryBigData = true;
+		int numTrajectoryBigDataset = 250;
+		
+		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, printOutputZay, printConfusionMatrix, printDetailedClusters);
 		
 		//to evaluate the numbers of buckets produced by different numbers of hashing functions
 		/*
@@ -160,7 +168,9 @@ public class testTrajectoryClustering {
 	}
 	
 	private static void CVRRExperiment(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
-			boolean plotTrajectories, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, int fixNumberPartitionSegment) {
+			boolean plotTrajectories, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, 
+			int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, boolean printOutputZay, 
+			boolean printConfusionMatrix, boolean printDetailedClusters) {
 
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
@@ -186,6 +196,11 @@ public class testTrajectoryClustering {
 		//This have to be done here rather than in the clustering class to have a fair comparison.
 		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories,
 				fixNumberPartitionSegment, dataset);
+		
+		if(veryBigData)
+		{
+			workingTrajectories = bigDataset(numTrajectoryBigDataset, workingTrajectories); 
+		}
 			
 		if(method == ClusteringMethod.TRACLUS)
 		{
@@ -389,11 +404,13 @@ public class testTrajectoryClustering {
 			}
 		}
 
-		System.out.println("Real Clusters");
-		printSetOfCluster(minLins, realClusters, false);
-		System.out.println("Calculated Clusters: " + testClusters.size() + " Method: " + method );
-		printSetOfCluster(minLins, testClusters, false);
-		
+		if(printDetailedClusters)
+		{
+			System.out.println("Real Clusters");
+			printSetOfCluster(minLins, realClusters, false);
+			System.out.println("Calculated Clusters: " + testClusters.size() + " Method: " + method );
+			printSetOfCluster(minLins, testClusters, false);
+		}
 		
 		//to Plot clusters
 		if(plotTrajectories)
@@ -405,10 +422,13 @@ public class testTrajectoryClustering {
 		//Dataset
 		HashSet<Integer> allConsideredTrajectories = CommonFunctions.getHashSetAllTrajectories(workingTrajectories);
 
-		compareClusters(realClusters, testClusters, allConsideredTrajectories);
+		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
 		//Print Output for Zay to run other cluster statistics in Phyton
-		printTrajectoryLabels(testClusters);
+		if(printOutputZay)
+		{
+			printTrajectoryLabels(testClusters);
+		}
 		
 		//System.out.println("Inverted Output");
 		//compareClusters(testClusters, realClusters, allTrajectories);
@@ -469,8 +489,9 @@ public class testTrajectoryClustering {
 	 * @param baselineSet
 	 * @param testSet
 	 * @param allTrajectories
+	 * @param printConfusionMatrix 
 	 */
-	private static void compareClusters(ArrayList<Cluster> baselineSet, ArrayList<Cluster> testSet, HashSet<Integer> allTrajectories)
+	private static void compareClusters(ArrayList<Cluster> baselineSet, ArrayList<Cluster> testSet, HashSet<Integer> allTrajectories, boolean printConfusionMatrix)
 	{
 		//For Whole Method Statistics
 		float methodPurity = 0;
@@ -713,13 +734,16 @@ public class testTrajectoryClustering {
 			confusionMatrix = confusionMatrix +"\n";
 			legendIndex++;
 		}
-		System.out.println("\n");
-		System.out.println("**************Confusion Matrix***********");
-		System.out.println("Rows: \t\tReal Clusters");
-		System.out.println("Columns: \tTest Clusters");
-		System.out.println("Cells represent common elements between clusters.");
-		System.out.println("");		
-		System.out.println(confusionMatrix);
+		if(printConfusionMatrix)
+		{
+			System.out.println("\n");
+			System.out.println("**************Confusion Matrix***********");
+			System.out.println("Rows: \t\tReal Clusters");
+			System.out.println("Columns: \tTest Clusters");
+			System.out.println("Cells represent common elements between clusters.");
+			System.out.println("");		
+			System.out.println(confusionMatrix);
+		}
 	}
 	
 	//New experiments Rao
@@ -830,6 +854,33 @@ public class testTrajectoryClustering {
 		}else{
 			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
 		}
+		return workingTrajectories;
+	}
+	
+	private static ArrayList<Trajectory> bigDataset(int numberOfTrajectories, ArrayList<Trajectory> previousTrajectories)
+	{
+		ArrayList<Trajectory> workingTrajectories = new ArrayList<Trajectory>();
+		workingTrajectories.addAll(previousTrajectories);
+		int generatedTrajectoryId = previousTrajectories.size();
+		while(generatedTrajectoryId<numberOfTrajectories)
+		{
+			for(Trajectory t: previousTrajectories)
+			{
+				Trajectory temp = (Trajectory) t.clone();
+				temp.setTrajectoryId(generatedTrajectoryId);
+				workingTrajectories.add(temp);
+				generatedTrajectoryId++;
+				if(generatedTrajectoryId == numberOfTrajectories)
+				{
+					break;
+				}
+			}
+		}
+		
+		//For debugging Only
+		System.out.println("**********BIG DATASET*********");
+		System.out.println(workingTrajectories);
+		
 		return workingTrajectories;
 	}
 
