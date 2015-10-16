@@ -989,12 +989,15 @@ public class Traclus {
 
 		ArrayList<double[]> featureVectors = new ArrayList<double[]>();
 		
+		//TODO Print this only in debugging mode and debug logs
+		/*
 		//Print All buckets produced by Sliding Window
 		System.out.println("*******Hash Buckets in Sliding Windows*********");
 		//extras.AuxiliaryFunctions.printMap(allBuckets);
 		//interrupt(15000);
 		System.out.println("Number of buckets: " + allBuckets.size());
 		System.out.println("*******End Hash Buckets in Sliding Windows*********");
+		*/
 		
 		//Now create feature vectors
 		int o = 0;
@@ -1023,18 +1026,21 @@ public class Traclus {
 						listOfFeatureVectorsPerTrajectory.put(Integer.toString(t.getTrajectoryId()), fv);
 					}
 			}
-			System.out.println("Bucket #:" + o + " Bucket key (feature): " + feature);
+			//TODO Print this only in debugging mode and debug logs
+			//System.out.println("Bucket #:" + o + " Bucket key (feature): " + feature);
 			o++;
 		}
 		
+		//TODO Print this only in debugging mode and debug logs
 		//Print All buckets
+		/*
 		System.out.println("*******FeatureVectors in Sliding Windows*********");
 		extras.AuxiliaryFunctions.printMap(listOfFeatureVectorsPerTrajectory);
 		//interrupt(15000);
 		System.out.println("*******End FeatureVectors in Sliding Windows*********");
+		*/
 		
 		//Now cluster
-		//for( lfvt:listOfFeatureVectorsPerTrajectory)
 		
 		ArrayList<FeatureVector> AllFeatureVectors = new ArrayList<FeatureVector>(listOfFeatureVectorsPerTrajectory.values()); 
 		

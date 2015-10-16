@@ -37,24 +37,25 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN;
+		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
 		boolean simplifyTrajectories = true;
 		boolean printDetailedClusters = false;
-		boolean printOutputZay = true;
+		boolean printOutputZayFile = true;
+		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 30; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 25; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
 		boolean veryBigData = false;
 		int numTrajectoryBigDataset = 500;
 		
-		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, printOutputZay, printConfusionMatrix, printDetailedClusters);
+		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, printDetailedClusters);
 		
 		//to evaluate the numbers of buckets produced by different numbers of hashing functions
 		/*
@@ -170,7 +171,8 @@ public class testTrajectoryClustering {
 	
 	private static void CVRRExperiment(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
 			boolean plotTrajectories, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, 
-			int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, boolean printOutputZay, 
+			int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, boolean printOutputZayToFile, 
+			boolean printOutputZayToScreen, 
 			boolean printConfusionMatrix, boolean printDetailedClusters) {
 
 		//Make sure to initilize this for final version
@@ -426,9 +428,9 @@ public class testTrajectoryClustering {
 		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
 		//Print Output for Zay to run other cluster statistics in Phyton
-		if(printOutputZay)
+		if(printOutputZayToFile)
 		{
-			printTrajectoryLabels(testClusters);
+			printTrajectoryLabels(testClusters, printOutputZayToScreen);
 		}
 		
 		//System.out.println("Inverted Output");
@@ -439,7 +441,7 @@ public class testTrajectoryClustering {
 	 * Print for each cluster, the truth and predicted cluster label
 	 * @param testClusters
 	 */
-	private static void printTrajectoryLabels(ArrayList<Cluster> testClusters) {
+	private static void printTrajectoryLabels(ArrayList<Cluster> testClusters, boolean printZayOutputToScreen) {
 		System.out.println();
 		String zayOutput = "****OUTPUT FOR ZAY, PYTHON CLUSTER QUALITY METRICS****\n";
 		zayOutput = zayOutput + "Trajectory, True Cluster, Predicted Cluster\n";
@@ -450,7 +452,8 @@ public class testTrajectoryClustering {
 				zayOutput = zayOutput + t.getTrajectoryId() + ", " + t.getClusterIdPreLabel() + ", " + c.clusterID + "\n";
 			}
 		}
-		System.out.println(zayOutput);
+		if(printZayOutputToScreen) System.out.println(zayOutput);
+		
 		String path;
 		try {
 			path = extras.GetPropertyValues.getPropValues("Zay_Output_Exported");
