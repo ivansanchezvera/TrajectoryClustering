@@ -3,6 +3,7 @@ import graphics.TrajectoryPlotter;
 
 import java.awt.color.CMMException;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.security.AlgorithmConstraints;
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -21,6 +22,8 @@ import extras.AuxiliaryFunctions;
 
 
 public class testTrajectoryClustering {
+	
+	static ArrayList<Integer> representedOriginalTraj = new ArrayList<Integer>();
 	
 	public testTrajectoryClustering() {
 		// TODO Auto-generated constructor stub
@@ -49,7 +52,7 @@ public class testTrajectoryClustering {
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 15; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 60; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
 		boolean veryBigData = false;
@@ -201,6 +204,8 @@ public class testTrajectoryClustering {
 		//This have to be done here rather than in the clustering class to have a fair comparison.
 		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories,
 				fixNumberPartitionSegment, dataset);
+		
+		originalCompleteTrajectories = adjustCompleteTrajectoriesToSimplifiedIndex(workingTrajectories, originalCompleteTrajectories, representedOriginalTraj);
 		
 		if(veryBigData)
 		{
@@ -449,6 +454,37 @@ public class testTrajectoryClustering {
 	}
 
 	/**
+	 * This method matches the index of the original trajectories with the index of the simplified trajectories.
+	 * It is used to plot complete trajectories from sets of clusters composed of simplified trajectories. 
+	 * It is for evaluation purposes.
+	 * @param workingTrajectories
+	 * @param originalCompleteTrajectories
+	 * @param representedOriginalTraj2
+	 * @return List of Original trajectories with indexes that match those on the set of Simplified trajectories.
+	 */
+	private static ArrayList<Trajectory> adjustCompleteTrajectoriesToSimplifiedIndex(
+			ArrayList<Trajectory> workingTrajectories,
+			ArrayList<Trajectory> originalCompleteTrajectories,
+			ArrayList<Integer> representedOriginalTraj2) {
+		
+		ArrayList<Trajectory> adjustedOriginalTrajectorySet = new ArrayList<Trajectory>();
+		Collections.sort(representedOriginalTraj2);
+		for(Integer i:representedOriginalTraj2)
+		{
+			adjustedOriginalTrajectorySet.add(originalCompleteTrajectories.get(i));
+		}
+		
+		for(int i=0; i<workingTrajectories.size(); i++)
+		{
+			adjustedOriginalTrajectorySet.get(i).setTrajectoryId(i);
+		}
+		
+		return adjustedOriginalTrajectorySet;
+	}
+
+
+
+	/**
 	 * Print for each cluster, the truth and predicted cluster label
 	 * @param testClusters
 	 */
@@ -479,6 +515,7 @@ public class testTrajectoryClustering {
 
 
 	/**
+	 * This method prints a set of clusters
 	 * @param minLins
 	 * @param setOfClusterToPrint
 	 */
@@ -859,7 +896,8 @@ public class testTrajectoryClustering {
 	}
 
 	/**
-	 * Gets the trajectories, as an ArrayList of trajectories.
+	 * Gets the trajectories, as an ArrayList of trajectories. If simplified, writes simplified trajectories to a path and rereads.
+	 * Also writes a class variable so original trajectories can be match with the simplified trajectories in the reread (for plotting in order methods).
 	 * @param simplifyTrajectories : Determine if trajectories are simplified
 	 * @param fixNumberPartitionSegment : Determines the number of partitions on each of the return trajectories
 	 * @param dataset : The dataset to work on
@@ -867,13 +905,17 @@ public class testTrajectoryClustering {
 	 */
 	private static ArrayList<Trajectory> getTrajectories(boolean simplifyTrajectories,
 			int fixNumberPartitionSegment, String dataset) {
+		
 		ArrayList<Trajectory> workingTrajectories;
 		if(simplifyTrajectories)
 		{
 			String path = System.getProperty("user.dir") + "\\Simplified points\\";
-			OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
+			
+			//For printing Original Trajectories
+			representedOriginalTraj = OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
 			String exported = "CVRR_Dataset_Exported";
 			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
+			
 			
 		}else{
 			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
@@ -881,6 +923,13 @@ public class testTrajectoryClustering {
 		return workingTrajectories;
 	}
 	
+	/**
+	 * This method generates more trajectories based on an original dataset, by cloning trajectories in order in a loop
+	 * just changing the trajectory Id. This method is used only for testing time and scalability and not for Cluster Quality.
+	 * @param numberOfTrajectories : Number of Trajectories to generate
+	 * @param previousTrajectories : Set of base trajectories to copy until the needed number of trajectories is reached.
+	 * @return Big dataset of trajectories.
+	 */
 	private static ArrayList<Trajectory> bigDataset(int numberOfTrajectories, ArrayList<Trajectory> previousTrajectories)
 	{
 		ArrayList<Trajectory> workingTrajectories = new ArrayList<Trajectory>();
@@ -976,6 +1025,5 @@ public class testTrajectoryClustering {
 		}
 		TrajectoryPlotter.drawAllClusters(completeTrajSetOfClusters, true);
 		TrajectoryPlotter.drawAllClustersInSameGraph(completeTrajSetOfClusters, true, "AllClusterCompleteTrajectories");
-		
 	}
 }

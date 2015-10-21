@@ -10,22 +10,36 @@ public class OutputManagement {
 	}
 	
 	//In the future add the option to give an export path
-	public static void ExportReducedTrajectories(String path, String dataSetName, int numberOfPartitions)
+	/**
+	 * This method exports trajectories in its reduced state to a defined path.
+	 * @param path
+	 * @param dataSetName
+	 * @param numberOfPartitions
+	 * @return
+	 */
+	public static ArrayList<Integer> ExportReducedTrajectories(String path, String dataSetName, int numberOfPartitions)
 	{
 		String CVRRdatasetName = dataSetName;
 		ArrayList<Trajectory> trajectoriesFromInput = InputManagement.generateTestTrajectoriesFromDataSetCVRR(CVRRdatasetName, false, null);
 		
 		ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(trajectoriesFromInput, true, SegmentationMethod.douglasPeucker, numberOfPartitions);
 		
-		printSetOfTrajectories(path, simplifiedTrajectories, true);
+		//This is so we can Print the original Trajectories
+		ArrayList<Integer> representedTrajectories = new ArrayList<Integer>();
+		for(Trajectory t: simplifiedTrajectories)
+		{
+			representedTrajectories.add(t.getTrajectoryId());
+		}
 		
+		printSetOfTrajectories(path, simplifiedTrajectories, true);
+		return representedTrajectories;		
 	}
 	
 	/**
 	 * Exports (Creates files) of a given set of trajectories in the given path.
 	 * @param path
 	 * @param trajectories
-	 * @param isSimplifiedTrajectory : Simplified has headers, non simplified nomrally don't require this (specially for plotting on map).
+	 * @param isSimplifiedTrajectory : Simplified has headers, non simplified normally don't require this (specially for plotting on map).
 	 */
 	public static void printSetOfTrajectories(String path, ArrayList<Trajectory> trajectories, boolean isSimplifiedTrajectory)
 	{
