@@ -255,6 +255,8 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
+		
+		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 	
 		return clusterOfTrajectories;
 

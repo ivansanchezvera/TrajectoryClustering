@@ -36,17 +36,19 @@ public class TrajectoryPlotter {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public static void drawAllClusters(ArrayList<Cluster> clusters)
+	public static void drawAllClusters(ArrayList<Cluster> clusters, boolean useAlternateClusterName)
 	{
 		for(Cluster c:clusters)
 		{
-			drawCluster(c);
+			drawCluster(c, useAlternateClusterName);
 		}
 	}
 	
-	public static void drawAllClustersInSameGraph(ArrayList<Cluster> clusters)
+	public static void drawAllClustersInSameGraph(ArrayList<Cluster> clusters, boolean useAlternateName, String alternateName)
 	{
 		String chartName = "SetOfAllClusters";
+		if(useAlternateName) chartName = alternateName;
+		
 		//JFreeChart unifiedChart = new JFreeChart(null);
 		ArrayList<Dataset> setOfClustersDatasets = new  ArrayList<Dataset>();
 		for(Cluster c:clusters)
@@ -129,9 +131,13 @@ public class TrajectoryPlotter {
 		
 	}
 	
-	public static void drawCluster(Cluster c)
+	public static void drawCluster(Cluster c, boolean optionalName)
 	{
 		String chartName = "ClusterGraph" + c.getClusterID();
+		
+		//For the plot of complete trajectories
+		if(optionalName) chartName = chartName + "CompleteTrajectories";
+		
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		
 		for(Trajectory t: c.getElementsAsTrajectoryObjects())

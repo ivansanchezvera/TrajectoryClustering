@@ -37,7 +37,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN;
+		ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -49,7 +49,7 @@ public class testTrajectoryClustering {
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 25; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 15; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
 		boolean veryBigData = false;
@@ -195,6 +195,8 @@ public class testTrajectoryClustering {
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
+		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
+		ArrayList<Trajectory> originalCompleteTrajectories = getTrajectories(false, -1, dataset);
 		//Before clustering, lets simplify trajectories if we have to.
 		//This have to be done here rather than in the clustering class to have a fair comparison.
 		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories,
@@ -415,12 +417,7 @@ public class testTrajectoryClustering {
 			printSetOfCluster(minLins, testClusters, false);
 		}
 		
-		//to Plot clusters
-		if(plotTrajectories)
-		{
-			TrajectoryPlotter.drawAllClusters(testClusters);
-			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters);
-		}
+
 		//To calculate True negatives we need a HashSet of all trajectories in the initial
 		//Dataset
 		HashSet<Integer> allConsideredTrajectories = CommonFunctions.getHashSetAllTrajectories(workingTrajectories);
@@ -431,6 +428,20 @@ public class testTrajectoryClustering {
 		if(printOutputZayToFile)
 		{
 			printTrajectoryLabels(testClusters, printOutputZayToScreen);
+		}
+		
+		//to Plot clusters
+		if(plotTrajectories)
+		{
+			TrajectoryPlotter.drawAllClusters(testClusters, false);
+			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters, false, "");
+			try {
+				plotOriginalTrajectories(testClusters, originalCompleteTrajectories);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.err.println(e);
+				e.printStackTrace();
+			}
 		}
 		
 		//System.out.println("Inverted Output");
@@ -918,5 +929,53 @@ public class testTrajectoryClustering {
 			dataset = "CVRR_Dataset_Cross_Path";
 		}
 		return dataset;
+	}
+	
+	/**
+	 * This method allows to plot all trajectories from clusters with simplified trajectories. It is for comparison and
+	 * visual aid, specially for LSH-Euclidean and K-Means Euclidean, which only use simplified trajectories.
+	 * @param simpleTrajSetOfClusters
+	 * @param originalTrajectories
+	 * @throws Exception If the set of Cluster does not contain the same number of elements than the set of original trajectories
+	 */
+	private static void plotOriginalTrajectories(ArrayList<Cluster> simpleTrajSetOfClusters, ArrayList<Trajectory> originalTrajectories) throws Exception
+	{
+		//This could be refactored to be more efficient, other kind of checking peraphs.
+		int totalTrajectoriesInSetOfClustersSimpleTraj = 0;
+		for(Cluster c: simpleTrajSetOfClusters)
+		{
+			totalTrajectoriesInSetOfClustersSimpleTraj += c.elements.size();
+		}
+		
+		if(totalTrajectoriesInSetOfClustersSimpleTraj!=originalTrajectories.size())
+		{
+			throw new Exception("Error: Different number of trajectories in Set of Cluster with Simplified trajectories and the original set of trajectories!!!. Could not plot Clusters with complete trajectories.");
+		}
+		
+		ArrayList<Cluster> completeTrajSetOfClusters = new ArrayList<Cluster>();
+		for(Cluster c: simpleTrajSetOfClusters)
+		{
+			Cluster tempClusterCompleteTraj = new Cluster(c.getClusterID(), c.getClusterID() + "CompleteTraj");
+			for(Clusterable t: c.elements)
+			{
+				tempClusterCompleteTraj.addElement(originalTrajectories.get(t.id));
+				/*
+				int simplifiedTrajecId = t.id;
+				int tempCompleteTrajId = -1;
+				do{
+					Trajectory tempCompleteTrajectory = originalTrajectories.get(simplifiedTrajecId);
+					tempCompleteTrajId = tempCompleteTrajectory.getTrajectoryId();
+					if(tempCompleteTrajectory.getTrajectoryId()==simplifiedTrajecId)
+					{
+						tempClusterCompleteTraj.addElement(tempCompleteTrajectory);
+					}
+				}while(tempCompleteTrajId>simplifiedTrajecId);
+				*/
+			}
+			completeTrajSetOfClusters.add(tempClusterCompleteTraj);
+		}
+		TrajectoryPlotter.drawAllClusters(completeTrajSetOfClusters, true);
+		TrajectoryPlotter.drawAllClustersInSameGraph(completeTrajSetOfClusters, true, "AllClusterCompleteTrajectories");
+		
 	}
 }

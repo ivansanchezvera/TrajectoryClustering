@@ -260,6 +260,26 @@ public class Cluster {
 		cardinality = parentTrajectories.size();
 		return cardinality;
 	}
+	
+	/**
+	 * Only to return clusters with at least a minimum number of Elements minElems
+	 * @param originalClusters
+	 * @param minElems
+	 * @return
+	 */
+	public static ArrayList<Cluster> keepClustersWithMinElements(ArrayList<Cluster> originalClusters, int minElems)
+	{
+		ArrayList<Cluster> purgedClusters = new ArrayList<Cluster>();
+		
+		for(Cluster c: originalClusters)
+		{
+			if(c.getElements().size()>=minElems)
+			{
+				purgedClusters.add(c);
+			}
+		}
+		return purgedClusters;
+	}
 
 	@Override
 	public String toString() {
