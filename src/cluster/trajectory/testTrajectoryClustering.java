@@ -29,8 +29,6 @@ public class testTrajectoryClustering {
 		// TODO Auto-generated constructor stub
 	}
 
-
-	
 	/**
 	 * Main method to test all the experiments.
 	 * Basically this class glues everything together and allows the easy execution 
@@ -40,7 +38,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
+		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION_DTW;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -49,6 +47,7 @@ public class testTrajectoryClustering {
 		boolean printOutputZayFile = true;
 		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
+		boolean printIntraClusterDistanceMatrix = true;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
@@ -58,7 +57,10 @@ public class testTrajectoryClustering {
 		boolean veryBigData = false;
 		int numTrajectoryBigDataset = 500;
 		
-		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, printDetailedClusters);
+		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, 
+				simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, 
+				printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, printDetailedClusters, 
+				printIntraClusterDistanceMatrix);
 		
 		//to evaluate the numbers of buckets produced by different numbers of hashing functions
 		/*
@@ -175,8 +177,8 @@ public class testTrajectoryClustering {
 	private static void CVRRExperiment(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
 			boolean plotTrajectories, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, 
 			int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, boolean printOutputZayToFile, 
-			boolean printOutputZayToScreen, 
-			boolean printConfusionMatrix, boolean printDetailedClusters) {
+			boolean printOutputZayToScreen, boolean printConfusionMatrix, boolean printDetailedClusters, 
+			boolean printIntraClusterDistanceMatrix) {
 
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
@@ -448,9 +450,33 @@ public class testTrajectoryClustering {
 				e.printStackTrace();
 			}
 		}
-		
+	
+		if(printIntraClusterDistanceMatrix)	printIntraClusterDistanceMatrix(method, testClusters);
 		//System.out.println("Inverted Output");
 		//compareClusters(testClusters, realClusters, allTrajectories);
+	}
+
+	/**
+	 * This method prints a matrix with a the pairwise distance for the elements of each cluster. Intracluster distances.
+	 * @param method : The clustering method which generated the set of clusters. It is important because it 
+	 * defines the notion of distance, so the it determines the distances to calculate and print for each pair of elements within a cluster.
+	 * @param testClusters : The set of clusters to evaluate and print the matrix.
+	 */
+	private static void printIntraClusterDistanceMatrix(
+			ClusteringMethod method, ArrayList<Cluster> testClusters) {
+		if((method.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || method.equals(ClusteringMethod.KMEANS_DTW) || method.equals(ClusteringMethod.KMEDOIDS_DTW)))
+		{
+			try {
+				ClusterQualityMeterer.intraClusterDistanceDTWForAllClustersInSet(testClusters, method);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else{
+			System.out.println("No Intracluster distance matrix defined yet for the metric used in method: " + method.toString());
+		}
+		
+		//TODO Create and print Matrixes for other distance measures.
 	}
 
 	/**
