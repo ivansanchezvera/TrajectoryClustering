@@ -2,6 +2,7 @@ package cluster.trajectory;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashMap;
 
 public class ConcatenatedHashingFuntions {
 
@@ -70,5 +71,33 @@ public class ConcatenatedHashingFuntions {
 		}
 		
 		return hashedTrajectories;
+	}
+	
+	/**
+	 * This function hashes all the trajectories to boolean feature vectors.
+	 * It is particularly useful for doing Kmeans over DBH Hashed trajectories.
+	 * @param trajectories : A list of trajectories to hash to a list of feature vectors.
+	 * @return A List of Feature Vectores obtained from the DBH Hashing of the trajectory list.
+	 */
+	public ArrayList<FeatureVector> executeHashForFeatureVectors(ArrayList<Trajectory> trajectories)
+	{
+		ArrayList<FeatureVector> hashedTrajectoriesAsFeatureVectors = new ArrayList<FeatureVector>();
+		
+		for(int j=0; j<trajectories.size(); j++)
+		{
+			FeatureVector fv = new FeatureVector(j);
+			BitSet hashResult = new BitSet(hashingFunctions.size());
+			int i = 0;
+			for(HashingFunction h:hashingFunctions)
+			{
+				boolean	hash = h.getCalculatedHashBool().get(j);	
+				hashResult.set(i, hash);
+				i++;
+			}
+			fv.setFeatures(hashResult);
+			
+			hashedTrajectoriesAsFeatureVectors.add(fv);
+		}
+		return hashedTrajectoriesAsFeatureVectors;
 	}
 }

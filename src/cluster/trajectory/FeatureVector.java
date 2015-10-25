@@ -1,6 +1,9 @@
 package cluster.trajectory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Vector;
 
 import com.stromberglabs.cluster.Clusterable;
 
@@ -46,6 +49,23 @@ public class FeatureVector implements Clusterable{
 	@Override
 	public String toString() {
 		return "FeatureVector [id=" + id + ", features=" + features + "]";
+	}
+
+	/**
+	 * This function converts a BitSet (a set of bits or BitArray aka Vector of booleans)
+	 * to a vector of floats so it can be integrated to the feature Vector class.
+	 * This particular function is needed to do Kmeans over a Feature Vector of Booleans with DBH.
+	 * @param hashResult : An array of bits (booleans).
+	 */
+	public void setFeatures(BitSet hashResult) {
+		// TODO Auto-generated method stub
+		long[] longVector = hashResult.toLongArray();
+		
+		features = new ArrayList<Float>();
+		for(int i = 0; i<longVector.length; i++)
+		{
+			features.add((float) longVector[i]);
+		}
 	}
 
 	

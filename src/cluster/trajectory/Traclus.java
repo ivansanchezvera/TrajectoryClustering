@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -201,6 +202,30 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
+	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k) {
+		
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		//As suggested by Zay, lets try to do K means over the Feature vectors generated from dbh
+		try {
+			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k);
+		} catch (Exception e) {
+			System.err.print(e.getMessage());
+			e.printStackTrace();
+		}
+		
+		long stopTime = System.nanoTime();
+		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
+		
+		
+		return clusterOfTrajectories;
+	}
+
+
+
 	/**
 	 * This Method calculates approximate clusters using LSH to project Euclidean Distance (L2 Norm).
 	 * @return Clusters
@@ -507,70 +532,7 @@ public class Traclus {
 			//to select random trajectory elements
 			Random r = new Random();
 			
-			ArrayList<ConcatenatedHashingFuntions> lkBitFunctions = new ArrayList<ConcatenatedHashingFuntions>(l);
-			
-			//First obtain the set of V of intervals that make the function split in halt
-			//?? T1 and t2 should come from here
-			//Select thresholds CORRECTLY, this is shit!
-
-			for(int i=0; i<l; i++)
-			{
-				ConcatenatedHashingFuntions chf = new ConcatenatedHashingFuntions(k);
-				
-				while(!chf.isConcatenationComplete())
-				{
-					//First get 2 random members (trajectories)
-					Trajectory s1 = simplifiedTrajectories.get(r.nextInt(simplifiedTrajectories.size()));
-					Trajectory s2 = simplifiedTrajectories.get(r.nextInt(simplifiedTrajectories.size()));
-					
-					//Create the hashing function and calculate the interval t1-t2
-					HashingFunction newHF = new HashingFunction(s1,s2);
-					newHF.findT1T2(simplifiedTrajectories);
-					
-					chf.concatenate(newHF);
-				}
-				
-				lkBitFunctions.add(chf); 
-			}
-			
-			//now create hash tables and hash
-			ArrayList<HashTable> hashTables = new ArrayList<HashTable>();
-			
-			//Initialize hash tables
-			for(int w=0; w<lkBitFunctions.size();w++)
-			{
-				HashTable ht = new HashTable(w, k, true);
-				hashTables.add(ht);
-			}
-			
-			//now hash all trajectories
-			//Seems like a extremely expensive process
-			/*
-			 * This code works but needs recalculating clusters
-			for(Trajectory t0:simplifiedTrajectories)
-			{
-				for(int w=0; w<lkBitFunctions.size();w++)
-				{
-					ConcatenatedHashingFuntions tempCHF = lkBitFunctions.get(w);
-					//now hash and index all in once
-					
-					//This requires recalculating the hashes
-					hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
-				}
-			}
-			*/
-			
-
-			for(int w=0; w<lkBitFunctions.size();w++)
-			{
-				ConcatenatedHashingFuntions tempCHF = lkBitFunctions.get(w);
-				//now hash and index all in once
-					
-				//This requires recalculating the hashes
-				//hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
-					
-				hashTables.get(w).addAllToBucketBooleanHash(simplifiedTrajectories, tempCHF.execute(simplifiedTrajectories));
-			}
+			ArrayList<HashTable> hashTables = generateHashTablesFromDBHHashing(simplifiedTrajectories, l, k);
 				
 			//Now create the clusters, this seems infeasible
 			ArrayList<ApproximatedSetOfCluster> listApproximatedSetClusters = new ArrayList<ApproximatedSetOfCluster>();
@@ -604,27 +566,9 @@ public class Traclus {
 				//approxSetCluster.pruneApproximatedSetOfClusters(l);
 			}
 			
-			//Merging clusters between the different hash sets (clusters-bucket) from the
-			//different hash tables. If we merge we obtain more members in the clusters
-			//But is more expensive and imprecise
-			if(merge)
-			{
-				//Just validate and get the first Set of clusters (first hash table), this is for the merge
-				if(listApproximatedSetClusters.size()>0)
-				{
-					finalCluster = new ApproximatedSetOfCluster(listApproximatedSetClusters.get(0));
-				}
-
-				//Now intersect and merge
-				for(int w=1; w<listApproximatedSetClusters.size();w++)
-				{
-					finalCluster = ApproximatedSetOfCluster.mergeApproximatedSetCluster(finalCluster, listApproximatedSetClusters.get(w), minNumElems, mergeRatio);
-				}
-			}else{
-				//Just because its faster, get an Approx Cluster at random with no merge
-				//Get a random set of clusters from the hash table
-				finalCluster = listApproximatedSetClusters.get(r.nextInt(listApproximatedSetClusters.size()));
-			}
+			finalCluster = mergeClustersFromDifferentHashTablesDBH(minNumElems,
+					merge, mergeRatio, r, listApproximatedSetClusters,
+					finalCluster);
 				
 			//My common representation of set of Clusters
 			ArrayList<Cluster> finalListClusterRepresentation = new ArrayList<Cluster>();
@@ -648,6 +592,149 @@ public class Traclus {
 			
 			return finalListClusterRepresentation;
 		}
+
+		/**
+		 * This function Generates L hash tables from DBH hashing with Kbits on a Given List of Trajectories
+		 * @param trajectories : List of trajectories to Hash in order to obtain the hash tables.
+		 * @param l : Number of Hash Tables needed
+		 * @param k : Number of Bits that map to a Bucket, that is the number of hash functions to concatenate for DBH
+		 * @return : ArrayList of L HashTables generated from DBH of the Trajectories with Kbits.
+		 */
+		private ArrayList<HashTable> generateHashTablesFromDBHHashing(
+				ArrayList<Trajectory> trajectories, int l, int kBits) {
+			ArrayList<ConcatenatedHashingFuntions> lkBitFunctions = new ArrayList<ConcatenatedHashingFuntions>(l);
+
+			//Create L functions composed of DBH hash functions of Kbits functions each
+			for(int i=0; i<l; i++)
+			{
+				ConcatenatedHashingFuntions chf = createKContentedHashFunctionsDBH(trajectories, kBits);
+				
+				lkBitFunctions.add(chf); 
+			}
+			
+			//now create hash tables and hash
+			ArrayList<HashTable> hashTables = new ArrayList<HashTable>();
+			
+			//Initialize hash tables
+			for(int w=0; w<lkBitFunctions.size();w++)
+			{
+				HashTable ht = new HashTable(w, kBits, true);
+				hashTables.add(ht);
+			}
+			
+			//now hash all trajectories
+			//Seems like a extremely expensive process
+			/*
+			 * This code works but needs recalculating clusters
+			for(Trajectory t0:simplifiedTrajectories)
+			{
+				for(int w=0; w<lkBitFunctions.size();w++)
+				{
+					ConcatenatedHashingFuntions tempCHF = lkBitFunctions.get(w);
+					//now hash and index all in once
+					
+					//This requires recalculating the hashes
+					hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
+				}
+			}
+			*/
+			
+
+			for(int w=0; w<lkBitFunctions.size();w++)
+			{
+				ConcatenatedHashingFuntions tempCHF = lkBitFunctions.get(w);
+				//now hash and index all in once
+					
+				//This requires recalculating the hashes
+				//hashTables.get(w).addToBucket(t0.getTrajectoryId(), tempCHF.execute(t0));
+					
+				hashTables.get(w).addAllToBucketBooleanHash(trajectories, tempCHF.execute(trajectories));
+			}
+			return hashTables;
+		}
+		
+		/**
+		 * This method creates Feature Vectors from DBH Hashing for all the trajectories
+		 * @param trajectories
+		 * @param l
+		 * @param kBits
+		 * @param r
+		 * @return
+		 */
+		private ArrayList<FeatureVector> generateFeatureVectorsFromDBHHashing(ArrayList<Trajectory> trajectories, int kBits) {
+
+			ConcatenatedHashingFuntions chf = createKContentedHashFunctionsDBH(
+					trajectories, kBits);
+						
+			ArrayList<FeatureVector> featureVectors = chf.executeHashForFeatureVectors(trajectories);
+			return featureVectors;
+		}
+
+		/**
+		 * This method creates and concatenates K functions of the DBH type of Hashing functions.
+		 * This concatenated functions can produce a Kbit address for the buckets of hash table. It can also produce signatures for 
+		 * each trajectory element. Also used to produce Feature Vectors
+		 * @param trajectories
+		 * @param kBits : This is the number of DBH hash functions to concatenate to produce a KBit boolean addess - Signature for each trajectory
+		 * @return A concatenated DBH HashFunction composed of K independent DBH HashFunctions
+		 */
+		private ConcatenatedHashingFuntions createKContentedHashFunctionsDBH(
+				ArrayList<Trajectory> trajectories, int kBits) {
+			Random r = new Random();
+			ConcatenatedHashingFuntions chf = new ConcatenatedHashingFuntions(kBits);
+			
+			while(!chf.isConcatenationComplete())
+			{
+				//First get 2 random members (trajectories)
+				Trajectory s1 = trajectories.get(r.nextInt(trajectories.size()));
+				Trajectory s2 = trajectories.get(r.nextInt(trajectories.size()));
+				
+				//Create the hashing function and calculate the interval t1-t2
+				HashingFunction newHF = new HashingFunction(s1,s2);
+				newHF.findT1T2(trajectories);
+				
+				chf.concatenate(newHF);
+			}
+			return chf;
+		}
+		
+
+	/**
+	 * @param minNumElems
+	 * @param merge
+	 * @param mergeRatio
+	 * @param r
+	 * @param listApproximatedSetClusters
+	 * @param finalCluster
+	 * @return
+	 */
+	private ApproximatedSetOfCluster mergeClustersFromDifferentHashTablesDBH(
+			int minNumElems, boolean merge, float mergeRatio, Random r,
+			ArrayList<ApproximatedSetOfCluster> listApproximatedSetClusters,
+			ApproximatedSetOfCluster finalCluster) {
+		//Merging clusters between the different hash sets (clusters-bucket) from the
+		//different hash tables. If we merge we obtain more members in the clusters
+		//But is more expensive and imprecise
+		if(merge)
+		{
+			//Just validate and get the first Set of clusters (first hash table), this is for the merge
+			if(listApproximatedSetClusters.size()>0)
+			{
+				finalCluster = new ApproximatedSetOfCluster(listApproximatedSetClusters.get(0));
+			}
+
+			//Now intersect and merge
+			for(int w=1; w<listApproximatedSetClusters.size();w++)
+			{
+				finalCluster = ApproximatedSetOfCluster.mergeApproximatedSetCluster(finalCluster, listApproximatedSetClusters.get(w), minNumElems, mergeRatio);
+			}
+		}else{
+			//Just because its faster, get an Approx Cluster at random with no merge
+			//Get a random set of clusters from the hash table
+			finalCluster = listApproximatedSetClusters.get(r.nextInt(listApproximatedSetClusters.size()));
+		}
+		return finalCluster;
+	}
 	
 	//DBH HASHING
 	public ArrayList<Cluster> approximateClustersDBHOld(ArrayList<Trajectory> simplifiedTrajectories, int l, int k, float t1, float t2, int minNumElems, boolean merge, float mergeRatio) throws Exception
@@ -818,27 +905,8 @@ public class Traclus {
 			//approxSetCluster.pruneApproximatedSetOfClusters(l);
 		}
 		
-		//Merging clusters between the different hash sets (clusters-bucket) from the
-		//different hash tables. If we merge we obtain more members in the clusters
-		//But is more expensive and imprecise
-		if(merge)
-		{
-			//Just validate and get the first Set of clusters (first hash table), this is for the merge
-			if(listApproximatedSetClusters.size()>0)
-			{
-				finalCluster = new ApproximatedSetOfCluster(listApproximatedSetClusters.get(0));
-			}
-
-			//Now intersect and merge
-			for(int w=1; w<listApproximatedSetClusters.size();w++)
-			{
-				finalCluster = ApproximatedSetOfCluster.mergeApproximatedSetCluster(finalCluster, listApproximatedSetClusters.get(w), minNumElems, mergeRatio);
-			}
-		}else{
-			//Just because its faster, get an Approx Cluster at random with no merge
-			//Get a random set of clusters from the hash table
-			finalCluster = listApproximatedSetClusters.get(r.nextInt(listApproximatedSetClusters.size()));
-		}
+		finalCluster = mergeClustersFromDifferentHashTablesDBH(minNumElems,
+				merge, mergeRatio, r, listApproximatedSetClusters, finalCluster);
 			
 		//My common representation of set of Clusters
 		ArrayList<Cluster> finalListClusterRepresentation = new ArrayList<Cluster>();
@@ -1063,6 +1131,31 @@ public class Traclus {
 		AuxiliaryFunctions.printMap(allBuckets);
 		System.err.println("*****************");
 		*/		
+	}
+	
+	/**
+	 * This function calls other methods to crete feature vectors for all trajectories using DBH Hashing techniques and
+	 * then hash those feature vectores using Kmeans.
+	 * @param workingTrajectories
+	 * @param numBits : Number of bits to produce with DBH hashing for each trajectory signature or vector. 
+	 * This is also the same number of concatenated DBH hash fucntions to use with the DBH process.
+	 * @param k : Number of clusters to produce with K-Means.
+	 * @return
+	 */
+	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k) 
+	{
+		ArrayList<FeatureVector> AllFeatureVectors = generateFeatureVectorsFromDBHHashing(workingTrajectories, numBits);
+	
+		//Use KMeans to custer
+		ArrayList<Cluster> kmeansClusters = null;
+		try {
+			kmeansClusters = Kmeans.executeVectorKmeans(AllFeatureVectors, workingTrajectories, k);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+		return kmeansClusters;
+
 	}
 	
 	//Clustering Phase
@@ -1476,6 +1569,7 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
+
 
 	//Calculate Representative Trajectories.
 	//This step is done in each individual cluster, so it is in the cluster class.

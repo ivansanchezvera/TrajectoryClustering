@@ -38,7 +38,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.DBH_APPROXIMATION_DTW;
+		ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -48,16 +48,17 @@ public class testTrajectoryClustering {
 		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
 		boolean printIntraClusterDistanceMatrix = true;
+		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = true;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 60; //normal value = 8 //9 for tests with zay
+		int numberOfPartitionsPerTrajectory = 20; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
 		boolean veryBigData = false;
 		int numTrajectoryBigDataset = 500;
 		
-		CVRRExperiment(method, trajectoryDataset, plotTrajectories, simplifyTrajectories, 
+		CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, simplifyTrajectories, 
 				simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, 
 				printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, printDetailedClusters, 
 				printIntraClusterDistanceMatrix);
@@ -175,9 +176,9 @@ public class testTrajectoryClustering {
 	}
 	
 	private static void CVRRExperiment(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
-			boolean plotTrajectories, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, 
-			int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, boolean printOutputZayToFile, 
-			boolean printOutputZayToScreen, boolean printConfusionMatrix, boolean printDetailedClusters, 
+			boolean plotTrajectories, boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters, boolean simplifyTrajectories, 
+			SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, 
+			boolean printOutputZayToFile, boolean printOutputZayToScreen, boolean printConfusionMatrix, boolean printDetailedClusters, 
 			boolean printIntraClusterDistanceMatrix) {
 
 		//Make sure to initilize this for final version
@@ -200,14 +201,18 @@ public class testTrajectoryClustering {
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
-		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
 		ArrayList<Trajectory> originalCompleteTrajectories = getTrajectories(false, -1, dataset);
+		
 		//Before clustering, lets simplify trajectories if we have to.
 		//This have to be done here rather than in the clustering class to have a fair comparison.
 		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories,
 				fixNumberPartitionSegment, dataset);
 		
-		originalCompleteTrajectories = adjustCompleteTrajectoriesToSimplifiedIndex(workingTrajectories, originalCompleteTrajectories, representedOriginalTraj);
+		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
+		if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters){
+			
+			originalCompleteTrajectories = adjustCompleteTrajectoriesToSimplifiedIndex(workingTrajectories, originalCompleteTrajectories, representedOriginalTraj);
+		}
 		
 		if(veryBigData)
 		{
@@ -295,7 +300,7 @@ public class testTrajectoryClustering {
 		//float t1 = 0; //Find this parameter
 		//float t2 = 1500; //Should be infinity
 		int l = 1;
-		int numBits = 5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
+		int numBits = 10; //5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
 		float mergeRatio = 1/2;
 		boolean merge = false;
 		
@@ -305,6 +310,26 @@ public class testTrajectoryClustering {
 		//I need to establish better parameters
 		testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(l, numBits, minNumElems, merge, mergeRatio);
 		}
+		
+		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR)
+		{
+		segmentationMethod = SegmentationMethod.douglasPeucker;
+		//For Trajectory Partition using Douglas-Peucker
+		double epsilonDouglasPeucker = 0.001;
+		fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
+
+		//TODO Implement the filtering for minNumElems
+		int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
+		int numBits = 30; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+		int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+		
+		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+		
+		
+		//I need to establish better parameters
+		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k);
+		}
+		
 		
 		//For K-Medoids
 		if(method == ClusteringMethod.KMEDOIDS_DTW)
@@ -390,6 +415,8 @@ public class testTrajectoryClustering {
 			
 		}
 		
+		
+		
 		//PrintReal Cluster Data
 		ArrayList<Cluster> realClusters = new ArrayList<Cluster>();
 		for(Trajectory t:workingTrajectories)
@@ -442,12 +469,15 @@ public class testTrajectoryClustering {
 		{
 			TrajectoryPlotter.drawAllClusters(testClusters, false);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters, false, "");
-			try {
-				plotOriginalTrajectories(testClusters, originalCompleteTrajectories);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				System.err.println(e);
-				e.printStackTrace();
+			if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters)
+			{
+				try {
+					plotOriginalTrajectories(testClusters, originalCompleteTrajectories);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					System.err.println(e);
+					e.printStackTrace();
+				}
 			}
 		}
 	
