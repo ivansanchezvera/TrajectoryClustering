@@ -57,15 +57,52 @@ public class FeatureVector implements Clusterable{
 	 * This particular function is needed to do Kmeans over a Feature Vector of Booleans with DBH.
 	 * @param hashResult : An array of bits (booleans).
 	 */
-	public void setFeatures(BitSet hashResult) {
+	public void setFeaturesToVectorSingleRealValue(BitSet hashResult) {
 		// TODO Auto-generated method stub
 		long[] longVector = hashResult.toLongArray();
+		
+		if(longVector.length<1)
+		{
+			//TODO add this to debug only log
+			//System.err.println("Hey, feature vector is empty, from hashbit: " + hashResult + " bitlength: " + hashResult.length() + " bitsize: " + hashResult.size());
+			longVector = new long[]{0};
+		}
 		
 		features = new ArrayList<Float>();
 		for(int i = 0; i<longVector.length; i++)
 		{
 			features.add((float) longVector[i]);
 		}
+	}
+	
+	/**
+	 * This function converts a BitSet (a set of bits or BitArray aka Vector of booleans)
+	 * to a vector of floats so it can be integrated to the feature Vector class.
+	 * This particular function is needed to do Kmeans over a Feature Vector of Booleans with DBH.
+	 * @param hashResult : An array of bits (booleans).
+	 */
+	public void setFeaturesToBinaryVector(BitSet hashResult, int maxNumberOfFeatures) {
+		// TODO Auto-generated method stub
+		//long[] longVector = hashResult.toLongArray();
+		
+		for(int i = 0; i<maxNumberOfFeatures; i++)
+		{
+			//TODO add this to debug only log
+			//System.err.println("Hey, feature vector is empty, from hashbit: " + hashResult + " bitlength: " + hashResult.length() + " bitsize: " + hashResult.size());
+			float tempValue = (hashResult.get(i)?1:0);
+			features.add(tempValue);
+		}
+	}
+	
+	public String featuresToString()
+	{
+		String featuresInString = "";
+		for(float f: features)
+		{
+			int featureInteger = (int) Math.floor(f);
+			featuresInString = featuresInString + featureInteger;
+		}
+		return featuresInString;
 	}
 
 	

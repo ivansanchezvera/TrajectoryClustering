@@ -43,11 +43,11 @@ public class testTrajectoryClustering {
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
 		boolean simplifyTrajectories = true;
-		boolean printDetailedClusters = false;
+		boolean printDetailedClusters = true;
 		boolean printOutputZayFile = true;
 		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
-		boolean printIntraClusterDistanceMatrix = true;
+		boolean printIntraClusterDistanceMatrix = false;
 		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = true;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
@@ -209,8 +209,7 @@ public class testTrajectoryClustering {
 				fixNumberPartitionSegment, dataset);
 		
 		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
-		if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters){
-			
+		if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories){
 			originalCompleteTrajectories = adjustCompleteTrajectoriesToSimplifiedIndex(workingTrajectories, originalCompleteTrajectories, representedOriginalTraj);
 		}
 		
@@ -320,7 +319,7 @@ public class testTrajectoryClustering {
 
 		//TODO Implement the filtering for minNumElems
 		int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
-		int numBits = 30; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+		int numBits = 6; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
 		int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 		
 		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
@@ -469,7 +468,7 @@ public class testTrajectoryClustering {
 		{
 			TrajectoryPlotter.drawAllClusters(testClusters, false);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters, false, "");
-			if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters)
+			if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories)
 			{
 				try {
 					plotOriginalTrajectories(testClusters, originalCompleteTrajectories);
@@ -494,7 +493,7 @@ public class testTrajectoryClustering {
 	 */
 	private static void printIntraClusterDistanceMatrix(
 			ClusteringMethod method, ArrayList<Cluster> testClusters) {
-		if((method.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || method.equals(ClusteringMethod.KMEANS_DTW) || method.equals(ClusteringMethod.KMEDOIDS_DTW)))
+		if((method.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || method.equals(ClusteringMethod.KMEANS_DTW) || method.equals(ClusteringMethod.KMEDOIDS_DTW) || method.equals(ClusteringMethod.DBH_DTW_FEATURE_VECTOR)))
 		{
 			try {
 				ClusterQualityMeterer.intraClusterDistanceDTWForAllClustersInSet(testClusters, method);

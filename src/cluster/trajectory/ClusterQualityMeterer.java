@@ -17,7 +17,7 @@ public class ClusterQualityMeterer {
 	
 	public static String intraClusterDistanceDTW(Cluster clusterToEvaluate, ClusteringMethod cm) throws Exception
 	{
-		if(!(cm.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || cm.equals(ClusteringMethod.KMEANS_DTW) || cm.equals(ClusteringMethod.KMEDOIDS_DTW)))
+		if(!(cm.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || cm.equals(ClusteringMethod.KMEANS_DTW) || cm.equals(ClusteringMethod.KMEDOIDS_DTW) || cm.equals(ClusteringMethod.DBH_DTW_FEATURE_VECTOR)))
 		{
 			throw new Exception("This comparison method is only suitable for clusters generated under DTW distance approach or approximation");
 		}
@@ -49,7 +49,7 @@ public class ClusterQualityMeterer {
 
 	public static void intraClusterDistanceDTWForAllClustersInSet(ArrayList<Cluster> setOfClusters, ClusteringMethod cm) throws Exception
 	{
-		if(!(cm.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || cm.equals(ClusteringMethod.KMEANS_DTW) || cm.equals(ClusteringMethod.KMEDOIDS_DTW)))
+		if(!(cm.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || cm.equals(ClusteringMethod.KMEANS_DTW) || cm.equals(ClusteringMethod.KMEDOIDS_DTW) ||  cm.equals(ClusteringMethod.DBH_DTW_FEATURE_VECTOR)))
 		{
 			throw new Exception("This comparison method is only suitable for clusters generated under DTW distance approach or approximation");
 		}

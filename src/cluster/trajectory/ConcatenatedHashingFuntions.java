@@ -77,9 +77,10 @@ public class ConcatenatedHashingFuntions {
 	 * This function hashes all the trajectories to boolean feature vectors.
 	 * It is particularly useful for doing Kmeans over DBH Hashed trajectories.
 	 * @param trajectories : A list of trajectories to hash to a list of feature vectors.
+	 * @param binaryFeature: Determines wether the resulting feature vector will result in a binary vector or if false in a single real value
 	 * @return A List of Feature Vectores obtained from the DBH Hashing of the trajectory list.
 	 */
-	public ArrayList<FeatureVector> executeHashForFeatureVectors(ArrayList<Trajectory> trajectories)
+	public ArrayList<FeatureVector> executeHashForFeatureVectors(ArrayList<Trajectory> trajectories, boolean binaryFeature, int maxNumberOfFeatures)
 	{
 		ArrayList<FeatureVector> hashedTrajectoriesAsFeatureVectors = new ArrayList<FeatureVector>();
 		
@@ -94,7 +95,13 @@ public class ConcatenatedHashingFuntions {
 				hashResult.set(i, hash);
 				i++;
 			}
-			fv.setFeatures(hashResult);
+			
+			if(binaryFeature)
+			{
+				fv.setFeaturesToBinaryVector(hashResult, maxNumberOfFeatures);
+			}else{
+				fv.setFeaturesToVectorSingleRealValue(hashResult);
+			}
 			
 			hashedTrajectoriesAsFeatureVectors.add(fv);
 		}
