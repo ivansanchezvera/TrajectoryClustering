@@ -36,11 +36,11 @@ public class TrajectoryPlotter {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public static void drawAllClusters(ArrayList<Cluster> clusters, boolean useAlternateClusterName)
+	public static void drawAllClusters(ArrayList<Cluster> clusters, boolean useAlternateClusterName, boolean isCompleteTrajectory)
 	{
 		for(Cluster c:clusters)
 		{
-			drawCluster(c, useAlternateClusterName);
+			drawCluster(c, useAlternateClusterName, isCompleteTrajectory);
 		}
 	}
 	
@@ -131,12 +131,13 @@ public class TrajectoryPlotter {
 		
 	}
 	
-	public static void drawCluster(Cluster c, boolean optionalName)
+	public static void drawCluster(Cluster c, boolean optionalName, boolean isCompleteTrajectory)
 	{
 		String chartName = "ClusterGraph" + c.getClusterID();
 		
 		//For the plot of complete trajectories
-		if(optionalName) chartName = chartName + "CompleteTrajectories";
+		if(optionalName) chartName = chartName + c.getClusterName();
+		if(isCompleteTrajectory) chartName = chartName + "CompleteTrajectories";
 		
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		

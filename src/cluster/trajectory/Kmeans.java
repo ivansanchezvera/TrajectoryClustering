@@ -64,7 +64,7 @@ public class Kmeans {
 			kmeansClusters.add(tempMyCluster);
 			
 			//TODO enable this in debug mode only.
-			System.out.println("Binary Vector cluster name: "+ tempMyCluster.getClusterName());
+			//System.out.println("Binary Vector cluster name: "+ tempMyCluster.getClusterName());
 		}
 		
 		return kmeansClusters;

@@ -61,6 +61,10 @@ public class HashTable {
 				buckets.get(bucketNumber).addElementToBucket(trajectories.get(i).getTrajectoryId());
 			}else{
 				HashBucket hBucket = new HashBucket();
+				hBucket.setBucketAddress(bucketList.get(i));
+				
+				//TODO ENABLE this output for debug logs only
+				//System.out.println("DHB Bucket Address: " + hBucket.getBucketAddressAsString());
 				hBucket.addElementToBucket(trajectories.get(i).getTrajectoryId());
 				buckets.set(bucketNumber, hBucket);
 			}

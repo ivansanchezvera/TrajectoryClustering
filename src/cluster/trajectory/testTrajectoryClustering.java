@@ -168,7 +168,7 @@ public class testTrajectoryClustering {
 		//ArrayList<Cluster> testClusters = traclus.executeDensityBasedClusterOverTrajectories();
 		
 		//For Kmeans for Whole trajectories
-		ArrayList<Cluster> testClusters = traclus.executeKMeansClusterOverTrajectories(13);
+		ArrayList<Cluster> testClusters = traclus.executeKMeansClusterOverTrajectories(13, minLins);
 		
 		//Here print Real cluster data, we do not have those labels yet here
 
@@ -276,6 +276,7 @@ public class testTrajectoryClustering {
 		//For Trajectory Partition using Douglas-Peucker
 		double epsilonDouglasPeucker = 0.001;
 		fixNumberPartitionSegment = 9; //normal value = 8 //9 for tests with zay
+		int minNumElems = 8;
 		
 		//overwriting test parameters
 		//eNeighborhoodParameter = (float) 27;
@@ -283,31 +284,31 @@ public class testTrajectoryClustering {
 		
 
 		//For Kmeans for Whole trajectories
-		testClusters = traclus.executeKMeansClusterOverTrajectories(15);
+		testClusters = traclus.executeKMeansClusterOverTrajectories(15, minNumElems);
 		}
 
 		if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
 		{
-		segmentationMethod = SegmentationMethod.douglasPeucker;
-		//For Trajectory Partition using Douglas-Peucker
-		double epsilonDouglasPeucker = 0.001;
-		fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-		simplifyTrajectories = false; //Normally set to true but now false cause we are simplifying before.
-		
-		//Parameters only for DBH APPROXIMATION
-		int minNumElems = 1;
-		//float t1 = 0; //Find this parameter
-		//float t2 = 1500; //Should be infinity
-		int l = 1;
-		int numBits = 10; //5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
-		float mergeRatio = 1/2;
-		boolean merge = false;
-		
-		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-		
-		
-		//I need to establish better parameters
-		testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(l, numBits, minNumElems, merge, mergeRatio);
+			segmentationMethod = SegmentationMethod.douglasPeucker;
+			//For Trajectory Partition using Douglas-Peucker
+			double epsilonDouglasPeucker = 0.001;
+			fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
+			simplifyTrajectories = false; //Normally set to true but now false cause we are simplifying before.
+			
+			//Parameters only for DBH APPROXIMATION
+			int minNumElems = 1;
+			//float t1 = 0; //Find this parameter
+			//float t2 = 1500; //Should be infinity
+			int l = 1;
+			int numBits = 10; //5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
+			float mergeRatio = 1/2;
+			boolean merge = false;
+			
+			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
+			
+			
+			//I need to establish better parameters
+			testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(l, numBits, minNumElems, merge, mergeRatio);
 		}
 		
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR)
@@ -342,6 +343,7 @@ public class testTrajectoryClustering {
 			double epsilonDouglasPeucker = 0.001;
 			fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
 			simplifyTrajectories = true; //Normally set to true
+			int minNumElems = 1;
 			
 			//Parameters for K-Medoids
 			int k = 15;
@@ -349,7 +351,7 @@ public class testTrajectoryClustering {
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
 			//For Kmeans for Whole trajectories
-			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k);
+			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k, minNumElems);
 			
 		}
 		
@@ -366,13 +368,14 @@ public class testTrajectoryClustering {
 			
 			//Parameters for K-Medoids
 			int k = 15;
+			int minNumElems = 1;
 			
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
 
 			
 			//For Kmeans for Whole trajectories
-			testClusters = traclus.executeKmeansDTW(k);
+			testClusters = traclus.executeKmeansDTW(k, minNumElems);
 			
 		}
 		
@@ -416,31 +419,7 @@ public class testTrajectoryClustering {
 		
 		
 		
-		//PrintReal Cluster Data
-		ArrayList<Cluster> realClusters = new ArrayList<Cluster>();
-		for(Trajectory t:workingTrajectories)
-		{
-			int clusterID = t.getClusterIdPreLabel();
-			if(realClusters!=null && (realClusters.size()<=clusterID )) //|| realClusters.size()==0 
-			{
-				for(int j = realClusters.size(); j<=clusterID; j++)
-				{
-					Cluster c = new Cluster(j, "Cluster"+j);
-					realClusters.add(c);
-				}
-			}
-			
-			
-			if(realClusters!=null && realClusters.get(clusterID) != null)
-			{
-				realClusters.get(clusterID).addElement(t);
-			}else{
-				Cluster c = new Cluster(clusterID, "Cluster"+clusterID);
-				c.addElement(t);
-				
-				realClusters.add(c);
-			}
-		}
+		ArrayList<Cluster> realClusters = getTrueClustersFromTrajectories(workingTrajectories);
 
 		if(printDetailedClusters)
 		{
@@ -466,7 +445,7 @@ public class testTrajectoryClustering {
 		//to Plot clusters
 		if(plotTrajectories)
 		{
-			TrajectoryPlotter.drawAllClusters(testClusters, false);
+			TrajectoryPlotter.drawAllClusters(testClusters, false, false);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters, false, "");
 			if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories)
 			{
@@ -483,6 +462,41 @@ public class testTrajectoryClustering {
 		if(printIntraClusterDistanceMatrix)	printIntraClusterDistanceMatrix(method, testClusters);
 		//System.out.println("Inverted Output");
 		//compareClusters(testClusters, realClusters, allTrajectories);
+	}
+
+	/**
+	 * This is to obtain the true clusters from the trajectory data with the true label.
+	 * @param workingTrajectories
+	 * @return Set of True Clusters
+	 */
+	public static ArrayList<Cluster> getTrueClustersFromTrajectories(
+			ArrayList<Trajectory> workingTrajectories) {
+		//PrintReal Cluster Data
+		ArrayList<Cluster> realClusters = new ArrayList<Cluster>();
+		for(Trajectory t:workingTrajectories)
+		{
+			int clusterID = t.getClusterIdPreLabel();
+			if(realClusters!=null && (realClusters.size()<=clusterID )) //|| realClusters.size()==0 
+			{
+				for(int j = realClusters.size(); j<=clusterID; j++)
+				{
+					Cluster c = new Cluster(j, "Cluster"+j);
+					realClusters.add(c);
+				}
+			}
+			
+			
+			if(realClusters!=null && realClusters.get(clusterID) != null)
+			{
+				realClusters.get(clusterID).addElement(t);
+			}else{
+				Cluster c = new Cluster(clusterID, "Cluster"+clusterID);
+				c.addElement(t);
+				
+				realClusters.add(c);
+			}
+		}
+		return realClusters;
 	}
 
 	/**
@@ -607,7 +621,7 @@ public class testTrajectoryClustering {
 	 * @param allTrajectories
 	 * @param printConfusionMatrix 
 	 */
-	private static void compareClusters(ArrayList<Cluster> baselineSet, ArrayList<Cluster> testSet, HashSet<Integer> allTrajectories, boolean printConfusionMatrix)
+	public static void compareClusters(ArrayList<Cluster> baselineSet, ArrayList<Cluster> testSet, HashSet<Integer> allTrajectories, boolean printConfusionMatrix)
 	{
 		//For Whole Method Statistics
 		float methodPurity = 0;
@@ -1078,7 +1092,7 @@ public class testTrajectoryClustering {
 			}
 			completeTrajSetOfClusters.add(tempClusterCompleteTraj);
 		}
-		TrajectoryPlotter.drawAllClusters(completeTrajSetOfClusters, true);
+		TrajectoryPlotter.drawAllClusters(completeTrajSetOfClusters, false, true);
 		TrajectoryPlotter.drawAllClustersInSameGraph(completeTrajSetOfClusters, true, "AllClusterCompleteTrajectories");
 	}
 }

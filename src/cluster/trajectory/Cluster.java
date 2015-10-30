@@ -26,6 +26,7 @@ public class Cluster {
 		parentTrajectories = new HashSet<Integer>();
 		elements = new ArrayList<>();
 		clusterSize = 0;
+		this.clusterName = clusterName;
 	}	
 	
 	@Override
