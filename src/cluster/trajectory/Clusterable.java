@@ -14,5 +14,17 @@ public abstract class Clusterable implements Cloneable{
 		return null;
 	}
 	
+	public static Trajectory convertToTrajectory(Clusterable element) throws Exception
+	{
+		Trajectory tempTraj;
+		if(element.getClass()==Trajectory.class)
+		{
+			tempTraj = (Trajectory) element;
+		}else{
+			throw new Exception("Error converting clustering element to Trajectory");
+		}
+		return tempTraj;
+	}
+	
 	//public void calculateDistance();
 }

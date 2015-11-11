@@ -3,6 +3,8 @@ package cluster.trajectory;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import javax.lang.model.element.Element;
+
 import extras.AuxiliaryFunctions;
 
 public class ClusterQualityMeterer {
@@ -65,4 +67,85 @@ public class ClusterQualityMeterer {
 		String filename = "IntraClusterDistancesForMethod" + cm.toString() + ".txt";
 		AuxiliaryFunctions.printStringToFile(setOfClustersIntraClusterDistanceMatrix, filename, path);
 	}
+	
+	//Sigan sigan sigan bailando, sigan sigan, con don Medardo...
+	
+	public static double silhouetteCoefficient(ArrayList<Cluster> setOfClusters) throws Exception
+	{
+		double overallSetSilhoutteCoefficient = 0;
+		//Calculate internal distance
+
+		for(Cluster c: setOfClusters)
+		{
+			int totalElementsInSet = 0;
+			for(Clusterable element:c.getElements())
+			{
+				totalElementsInSet += c.elements.size();
+				double silhouetteInternalIndexForElement = 0;
+				//Convert Clusterable to Trajectory
+				Trajectory t = Clusterable.convertToTrajectory(element);
+				
+				for(Clusterable element2:c.getElements())
+				{
+						Trajectory tempTraj = Clusterable.convertToTrajectory(element2);
+						if(!element.equals(element2))
+						{
+							silhouetteInternalIndexForElement += Trajectory.calculateDTWDistance(t, tempTraj);
+						}
+				}
+				//This is the mean distrance from the element to the other elements within its cluster 
+				//We Substracted one cause element is already in the cluster.
+				double finalSilhouetteInternalIndexForElement = silhouetteInternalIndexForElement/(c.elements.size()-1);
+				
+				Cluster similarCluster = findMostSimilarCluster(c, setOfClusters);
+				if(similarCluster==null) throw new Exception("Error finding similar Cluster, null element");
+				
+				double distanceToExternalElements = 0;
+				for(Clusterable externalElement: similarCluster.elements)
+				{
+					Trajectory externalElementTrajectory = Clusterable.convertToTrajectory(externalElement);
+					distanceToExternalElements += Trajectory.calculateDTWDistance(t, externalElementTrajectory);
+				}
+				double finalDistanceToExternalClusterForElement = distanceToExternalElements/similarCluster.elements.size();
+				
+				double silhouetteIndexForElement =  (finalDistanceToExternalClusterForElement - finalSilhouetteInternalIndexForElement)/Math.max(finalSilhouetteInternalIndexForElement, finalDistanceToExternalClusterForElement);
+				overallSetSilhoutteCoefficient += silhouetteIndexForElement; 
+			}
+			overallSetSilhoutteCoefficient = overallSetSilhoutteCoefficient/totalElementsInSet;
+		}
+		
+		return overallSetSilhoutteCoefficient;
+	}
+
+	private static Cluster findMostSimilarCluster(Cluster c, ArrayList<Cluster> setOfClusters) 
+	{
+		double minDistanceToOtherCluster = Double.POSITIVE_INFINITY;
+		Cluster similarCluster = null;
+		try {
+			c.calculateCentroid();
+
+			for(Cluster tempCluster: setOfClusters)
+			{
+				if(c.clusterID==tempCluster.clusterID) continue;
+					
+				tempCluster.calculateCentroid();
+
+				Trajectory tempCentroid = tempCluster.getCentroidElement();
+				
+				double distanceToOtherCluster = Trajectory.calculateDTWDistance(tempCentroid, c.getCentroidElement());
+				
+				if(distanceToOtherCluster<minDistanceToOtherCluster)
+				{
+					minDistanceToOtherCluster = distanceToOtherCluster;
+					similarCluster = tempCluster;
+				}			
+			}
+		} catch (Exception e) {
+			System.out.println("Error, could not Calculate Centroid");
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+		return similarCluster;
+	}
+	
 }

@@ -436,6 +436,16 @@ public class testTrajectoryClustering {
 
 		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
+		try {
+			double silhouetteCoefficient = ClusterQualityMeterer.silhouetteCoefficient(testClusters);
+			System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficient);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			System.out.println("Hey Error: " + e1.getMessage());
+			e1.printStackTrace();
+		}
+		
+		
 		//Print Output for Zay to run other cluster statistics in Phyton
 		if(printOutputZayToFile)
 		{

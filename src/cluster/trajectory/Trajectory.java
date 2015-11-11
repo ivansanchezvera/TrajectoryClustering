@@ -584,8 +584,8 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	 * @param t2 second trajectory
 	 * @return DTW cost of aligning the 2 trajectories using Euclidean distance as a metric
 	 */
-	public static double calculateDTWDistance(Trajectory t,
-			Trajectory t2) {
+	public static double calculateDTWDistance(Trajectory t,	Trajectory t2) 
+	{
 		// TODO Auto-generated method stub
 		  final DistanceFunction distFn = DistanceFunctionFactory.getDistFnByName("EuclideanDistance"); 
 		TimeSeries ts1 = new TimeSeries(t);

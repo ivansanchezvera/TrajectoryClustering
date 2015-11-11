@@ -262,6 +262,31 @@ public class Cluster {
 		return cardinality;
 	}
 	
+	public void calculateCentroid() throws Exception 
+	{
+		
+
+		//Find the point that minimizes the overall square sum 
+		//of distances to all other points and make it the new centroid
+			
+		//This next method could fail
+		if(getCentroidElement()==null)
+		{
+			if(elements.size()>0)
+			{
+				Trajectory t = Clusterable.convertToTrajectory(elements.get(0));
+				setCentroidElement(t);
+			}else{
+				throw new Exception("Fatal Error, no Trajectories Available");
+			}
+		}
+		
+		Trajectory centroidTrajectory = DBA.DBATrajectories(getCentroidElement(), getElementsAsTrajectoryObjectsArray());
+		setCentroidElement(centroidTrajectory);
+
+		
+	}
+	
 	/**
 	 * Only to return clusters with at least a minimum number of Elements minElems
 	 * @param originalClusters

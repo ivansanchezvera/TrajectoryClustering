@@ -1001,7 +1001,7 @@ public class Traclus {
 		ArrayList<Cluster> listOfDBHApproxClusters = createClustersFromHashTables(workingTrajectories, minNumElems, merge, mergeRatio, hashTables);
 		
 		long stopDBHClusteringProcessing = System.nanoTime();
-		long DBHClusteringTotalProcessing = stopDBHClusteringProcessing - startDBHClusteringProcessing + hashTotalTime;
+		double DBHClusteringTotalProcessing = (stopDBHClusteringProcessing - startDBHClusteringProcessing + hashTotalTime)/1000000000.0;
 		System.out.println("Total DBH Clustering Execution time in seconds: " + (DBHClusteringTotalProcessing));
 		
 		//TODO ENABLE this only in Debug logs
@@ -1044,7 +1044,7 @@ public class Traclus {
 			e.printStackTrace();
 		}
 		long stopDBHFeatureVectorClusteringTime = System.nanoTime();
-		long DBHFeatureVectorClusteringTotalProcessing = stopDBHFeatureVectorClusteringTime - startDBHFeatureVectorClusteringTime + hashTotalTime;
+		double DBHFeatureVectorClusteringTotalProcessing = (stopDBHFeatureVectorClusteringTime - startDBHFeatureVectorClusteringTime + hashTotalTime)/1000000000.0;
 		System.out.println("Total DBH Feature Vector Clustering Execution time in seconds: " + (DBHFeatureVectorClusteringTotalProcessing));
 		return kmeansClusters;
 

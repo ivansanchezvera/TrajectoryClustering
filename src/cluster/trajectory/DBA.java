@@ -141,21 +141,21 @@ public class DBA {
 
 	/**
 	 * Dtw Barycenter Averaging (DBA)
-	 * @param C average sequence to update
+	 * @param trCentroid average sequence to update
 	 * @param sequences set of sequences to average
 	 */
-	public static Trajectory DBATrajectories(Trajectory C, Trajectory[] sequences) {
+	public static Trajectory DBATrajectories(Trajectory trCentroid, Trajectory[] sequences) {
 
 		//Trajectory centroid to update
-		Trajectory centroid = new Trajectory(C.getTrajectoryId(), new ArrayList<Point>());
+		Trajectory centroid = new Trajectory(trCentroid.getTrajectoryId(), new ArrayList<Point>());
 		
-		final ArrayList<Point>[] tupleAssociation = new ArrayList[C.getPoints().size()];
+		final ArrayList<Point>[] tupleAssociation = new ArrayList[trCentroid.getPoints().size()];
 		for (int i = 0; i < tupleAssociation.length; i++) {
 			tupleAssociation[i] = new ArrayList<Point>(sequences.length);
 		}
 		int nbTuplesAverageSeq, i, j, indiceRes;
 		double res = 0.0;
-		int centerLength = C.getPoints().size();
+		int centerLength = trCentroid.getPoints().size();
 		int seqLength;
 
 		for (Trajectory T : sequences) {
@@ -163,17 +163,17 @@ public class DBA {
 
 			Point p;
 			
-			costMatrix[0][0] = C.getPoints().get(0).measureSpaceDistance(T.getPoints().get(0)); 
+			costMatrix[0][0] = trCentroid.getPoints().get(0).measureSpaceDistance(T.getPoints().get(0)); 
 			pathMatrix[0][0] = DBA.NIL;
 			optimalPathLength[0][0] = 0;
 
 			for (i = 1; i < centerLength; i++) {
-				costMatrix[i][0] = costMatrix[i - 1][0] + C.getPoints().get(i).measureSpaceDistance(T.getPoints().get(0));
+				costMatrix[i][0] = costMatrix[i - 1][0] + trCentroid.getPoints().get(i).measureSpaceDistance(T.getPoints().get(0));
 				pathMatrix[i][0] = DBA.UP;
 				optimalPathLength[i][0] = i;
 			}
 			for (j = 1; j < seqLength; j++) {
-				costMatrix[0][j] = costMatrix[0][j - 1] + C.getPoints().get(0).measureSpaceDistance(T.getPoints().get(j));
+				costMatrix[0][j] = costMatrix[0][j - 1] + trCentroid.getPoints().get(0).measureSpaceDistance(T.getPoints().get(j));
 				pathMatrix[0][j] = DBA.LEFT;
 				optimalPathLength[0][j] = j;
 			}
@@ -196,7 +196,7 @@ public class DBA {
 							optimalPathLength[i][j] = optimalPathLength[i - 1][j] + 1;
 							break;
 					}
-					costMatrix[i][j] = res + C.getPoints().get(i).measureSpaceDistance(T.getPoints().get(j));
+					costMatrix[i][j] = res + trCentroid.getPoints().get(i).measureSpaceDistance(T.getPoints().get(j));
 				}
 			}
 

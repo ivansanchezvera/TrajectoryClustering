@@ -20,8 +20,8 @@ public final class CommonFunctions {
 	    return filesInFolder;
 	}
 	
-	public static HashSet<Integer> getHashSetAllTrajectories(
-			ArrayList<Trajectory> testTrajectories) {
+	public static HashSet<Integer> getHashSetAllTrajectories(ArrayList<Trajectory> testTrajectories) 
+	{
 		// TODO Auto-generated method stub
 		HashSet<Integer> allTrajectories = new HashSet<Integer>();
 		
