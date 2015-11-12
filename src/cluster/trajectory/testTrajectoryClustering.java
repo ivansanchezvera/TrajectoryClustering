@@ -437,8 +437,14 @@ public class testTrajectoryClustering {
 		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
 		try {
-			double silhouetteCoefficient = ClusterQualityMeterer.silhouetteCoefficient(testClusters);
-			System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficient);
+			if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR 
+					|| method==ClusteringMethod.DBSCAN_DTW || method == ClusteringMethod.KMEANS_DTW || method == ClusteringMethod.KMEDOIDS_DTW)
+			{
+				double silhouetteCoefficient = ClusterQualityMeterer.silhouetteCoefficient(testClusters);
+				System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficient);
+			}else{
+				System.out.println("Silhoutte Coefficient only defined in Code for methods that use DTW distance.");
+			}
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			System.out.println("Hey Error: " + e1.getMessage());

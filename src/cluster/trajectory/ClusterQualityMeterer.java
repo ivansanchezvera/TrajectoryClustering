@@ -73,14 +73,14 @@ public class ClusterQualityMeterer {
 	public static double silhouetteCoefficient(ArrayList<Cluster> setOfClusters) throws Exception
 	{
 		double overallSetSilhoutteCoefficient = 0;
+		int totalElementsInSet = 0;
 		//Calculate internal distance
 
 		for(Cluster c: setOfClusters)
 		{
-			int totalElementsInSet = 0;
+			totalElementsInSet += c.elements.size();
 			for(Clusterable element:c.getElements())
 			{
-				totalElementsInSet += c.elements.size();
 				double silhouetteInternalIndexForElement = 0;
 				//Convert Clusterable to Trajectory
 				Trajectory t = Clusterable.convertToTrajectory(element);
@@ -95,7 +95,7 @@ public class ClusterQualityMeterer {
 				}
 				//This is the mean distrance from the element to the other elements within its cluster 
 				//We Substracted one cause element is already in the cluster.
-				double finalSilhouetteInternalIndexForElement = silhouetteInternalIndexForElement/(c.elements.size()-1);
+				double finalSilhouetteInternalIndexForElement = silhouetteInternalIndexForElement/(c.elements.size());
 				
 				Cluster similarCluster = findMostSimilarCluster(c, setOfClusters);
 				if(similarCluster==null) throw new Exception("Error finding similar Cluster, null element");
@@ -111,9 +111,8 @@ public class ClusterQualityMeterer {
 				double silhouetteIndexForElement =  (finalDistanceToExternalClusterForElement - finalSilhouetteInternalIndexForElement)/Math.max(finalSilhouetteInternalIndexForElement, finalDistanceToExternalClusterForElement);
 				overallSetSilhoutteCoefficient += silhouetteIndexForElement; 
 			}
-			overallSetSilhoutteCoefficient = overallSetSilhoutteCoefficient/totalElementsInSet;
 		}
-		
+		overallSetSilhoutteCoefficient = overallSetSilhoutteCoefficient/totalElementsInSet;
 		return overallSetSilhoutteCoefficient;
 	}
 
