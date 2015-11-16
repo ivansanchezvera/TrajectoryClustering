@@ -87,22 +87,32 @@ public class ConcatenatedHashingFuntions {
 		for(int j=0; j<trajectories.size(); j++)
 		{
 			FeatureVector fv = new FeatureVector(j);
-			BitSet hashResult = new BitSet(hashingFunctions.size());
-			int i = 0;
-			for(HashingFunction h:hashingFunctions)
-			{
-				boolean	hash = h.getCalculatedHashBool().get(j);	
-				hashResult.set(i, hash);
-				i++;
-			}
 			
 			if(binaryFeature)
 			{
+				BitSet hashResult = new BitSet(hashingFunctions.size());
+				int i = 0;
+				for(HashingFunction h:hashingFunctions)
+				{
+					boolean	hash = h.getCalculatedHashBool().get(j);	
+					hashResult.set(i, hash);
+					i++;
+				}
+				
 				fv.setFeaturesToBinaryVector(hashResult, maxNumberOfFeatures);
-			}else{
-				fv.setFeaturesToVectorSingleRealValue(hashResult);
+				//This line was used to represent the resulting bitset (binary hashes as a single Real Value (1 Dimension Array),
+				//That seems to have no use now but I still keep it for future experiments
+				//fv.setFeaturesToVectorSingleRealValue(hashResult);
+				
+			}else{				
+				ArrayList<Float> hashResultDoubleFV = new ArrayList<Float>();
+				for(HashingFunction h:hashingFunctions)
+				{
+					double hash =  h.getCalculatedHashes().get(j);
+					hashResultDoubleFV.add((float) hash);
+				}
+				fv.setFeatures(hashResultDoubleFV);			
 			}
-			
 			hashedTrajectoriesAsFeatureVectors.add(fv);
 		}
 		return hashedTrajectoriesAsFeatureVectors;

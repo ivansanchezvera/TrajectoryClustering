@@ -38,7 +38,7 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR;
+		ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
@@ -217,6 +217,69 @@ public class testTrajectoryClustering {
 		{
 			workingTrajectories = bigDataset(numTrajectoryBigDataset, workingTrajectories); 
 		}
+		
+		//TODO Erase this from actual code, it is just for a temporary experiment
+		//************For Rao Experiment with DBH DTW 2 clusters****************
+		//Lets just make a set of trajectories from the clusters we actually want
+		/*
+		ArrayList<Trajectory> filteredTrajectories = new ArrayList<Trajectory>();
+		//true cluster 3 (seems opposite in the graph to cluster 8)
+		Trajectory filtered0 = workingTrajectories.get(181);
+		filtered0.setTrajectoryId(0);
+		filteredTrajectories.add(filtered0);
+		Trajectory filtered1 = workingTrajectories.get(187);
+		filtered1.setTrajectoryId(1);
+		filteredTrajectories.add(filtered1);
+		Trajectory filtered2 = workingTrajectories.get(188);
+		filtered2.setTrajectoryId(2);
+		filteredTrajectories.add(filtered2);
+		//true cluster 8 (seems opposite in the graph to cluster 3)
+		Trajectory filtered3 = workingTrajectories.get(66);
+		filtered3.setTrajectoryId(3);
+		filteredTrajectories.add(filtered3);
+
+		Trajectory filtered4 = workingTrajectories.get(86);
+		filtered4.setTrajectoryId(4);
+		filteredTrajectories.add(filtered4);
+
+		Trajectory filtered5 = workingTrajectories.get(148);
+		filtered5.setTrajectoryId(5);
+		filteredTrajectories.add(filtered5);
+
+		Trajectory filtered6 = workingTrajectories.get(150);
+		filtered6.setTrajectoryId(6);
+		filteredTrajectories.add(filtered6);
+
+		Trajectory filtered7 = workingTrajectories.get(152);
+		filtered7.setTrajectoryId(7);
+		filteredTrajectories.add(filtered7);
+		
+		Trajectory filtered8 = workingTrajectories.get(154);
+		filtered8.setTrajectoryId(8);
+		filteredTrajectories.add(filtered8);
+
+		Trajectory filtered9 = workingTrajectories.get(156);
+		filtered9.setTrajectoryId(9);
+		filteredTrajectories.add(filtered9);
+
+		Trajectory filtered10 = workingTrajectories.get(174);
+		filtered10.setTrajectoryId(10);
+		filteredTrajectories.add(filtered10);
+
+		Trajectory filtered11 = workingTrajectories.get(175);
+		filtered11.setTrajectoryId(11);
+		filteredTrajectories.add(filtered11);
+
+		Trajectory filtered12 = workingTrajectories.get(190);
+		filtered12.setTrajectoryId(12);
+		filteredTrajectories.add(filtered12);
+
+		Trajectory filtered13 = workingTrajectories.get(192);
+		filtered13.setTrajectoryId(13);
+		filteredTrajectories.add(filtered13);
+		workingTrajectories = filteredTrajectories;
+		*/
+		//************End Of Rao Experiment****************
 			
 		if(method == ClusteringMethod.TRACLUS)
 		{
@@ -293,14 +356,13 @@ public class testTrajectoryClustering {
 			//For Trajectory Partition using Douglas-Peucker
 			double epsilonDouglasPeucker = 0.001;
 			fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-			simplifyTrajectories = false; //Normally set to true but now false cause we are simplifying before.
 			
 			//Parameters only for DBH APPROXIMATION
 			int minNumElems = 1;
 			//float t1 = 0; //Find this parameter
 			//float t2 = 1500; //Should be infinity
 			int l = 1;
-			int numBits = 10; //5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
+			int numBits = 1;//7; //5; //before was 9, but 10 bits produce crazy good results //Final value for old implementation settle to 12
 			float mergeRatio = 1/2;
 			boolean merge = false;
 			
@@ -311,23 +373,28 @@ public class testTrajectoryClustering {
 			testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(l, numBits, minNumElems, merge, mergeRatio);
 		}
 		
-		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR)
+		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY)
 		{
-		segmentationMethod = SegmentationMethod.douglasPeucker;
-		//For Trajectory Partition using Douglas-Peucker
-		double epsilonDouglasPeucker = 0.001;
-		fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-
 		//TODO Implement the filtering for minNumElems
 		int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
-		int numBits = 6; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
-		int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+		int numBits = 1; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+		int k = 2; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+		boolean isBinaryFeatureVector = true; //Cause we want a FV of 0's and 1's
 		
-		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-		
-		
+		traclus = new Traclus(workingTrajectories);
 		//I need to establish better parameters
-		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k);
+		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector);
+		}
+		
+		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS)
+		{
+			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
+			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+			int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
+			
+			traclus = new Traclus(workingTrajectories);
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector);
 		}
 		
 		
@@ -437,11 +504,14 @@ public class testTrajectoryClustering {
 		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
 		try {
-			if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR 
-					|| method==ClusteringMethod.DBSCAN_DTW || method == ClusteringMethod.KMEANS_DTW || method == ClusteringMethod.KMEDOIDS_DTW)
+			if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY 
+					|| method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS || method==ClusteringMethod.DBSCAN_DTW 
+					|| method == ClusteringMethod.KMEANS_DTW || method == ClusteringMethod.KMEDOIDS_DTW)
 			{
-				double silhouetteCoefficient = ClusterQualityMeterer.silhouetteCoefficient(testClusters);
-				System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficient);
+				double silhouetteCoefficientGeneratedClusters = ClusterQualityMeterer.silhouetteCoefficient(testClusters);
+				System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficientGeneratedClusters);
+				double silhouetteCoefficientRealClusters = ClusterQualityMeterer.silhouetteCoefficient(realClusters);
+				System.out.println("Internal Silhouette Coefficient Real Set of Clusters: " + silhouetteCoefficientRealClusters);
 			}else{
 				System.out.println("Silhoutte Coefficient only defined in Code for methods that use DTW distance.");
 			}
@@ -463,6 +533,7 @@ public class testTrajectoryClustering {
 		{
 			TrajectoryPlotter.drawAllClusters(testClusters, false, false);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters, false, "");
+			TrajectoryPlotter.drawAllClustersInSameGraph(realClusters, true, "Real Clusters");
 			if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories)
 			{
 				try {
@@ -512,6 +583,9 @@ public class testTrajectoryClustering {
 				realClusters.add(c);
 			}
 		}
+		
+		//Just to make sure there are no clusters with empty elements
+		realClusters = Cluster.keepClustersWithMinElements(realClusters, 1);
 		return realClusters;
 	}
 
@@ -523,7 +597,7 @@ public class testTrajectoryClustering {
 	 */
 	private static void printIntraClusterDistanceMatrix(
 			ClusteringMethod method, ArrayList<Cluster> testClusters) {
-		if((method.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || method.equals(ClusteringMethod.KMEANS_DTW) || method.equals(ClusteringMethod.KMEDOIDS_DTW) || method.equals(ClusteringMethod.DBH_DTW_FEATURE_VECTOR)))
+		if((method.equals(ClusteringMethod.DBH_APPROXIMATION_DTW) || method.equals(ClusteringMethod.KMEANS_DTW) || method.equals(ClusteringMethod.KMEDOIDS_DTW) || method.equals(ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY)))
 		{
 			try {
 				ClusterQualityMeterer.intraClusterDistanceDTWForAllClustersInSet(testClusters, method);

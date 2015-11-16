@@ -68,6 +68,19 @@ public class Traclus {
 		this.segmentationMethod = segmentationMethod;
 	}
 	
+	//New more Generic Constructor usable for all clustering Methods
+	/**
+	 * Constructor that only holds a copy of the trajectories, only thing we need to cluster in all methods.
+	 * This Class no longer represents only Traclus, it should be refactored.
+	 * This Generic Constructor should eventually replace the older constructors in later Refactorings
+	 * @param trajectories
+	 */
+	public Traclus(ArrayList<Trajectory> trajectories) {
+		this.trajectories = trajectories;
+		this.segmentsCompleteSet = new ArrayList<Segment>();
+		this.clusterOfTrajectories = new ArrayList<Cluster>();
+	}
+	
 	public ArrayList<Cluster> executeTraclus()
 	{
 		segmentsCompleteSet = partition(trajectories);
@@ -206,7 +219,7 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k) {
+	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector) {
 		
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -214,7 +227,7 @@ public class Traclus {
 		
 		//As suggested by Zay, lets try to do K means over the Feature vectors generated from dbh
 		try {
-			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k);
+			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector);
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
 			e.printStackTrace();
@@ -232,8 +245,6 @@ public class Traclus {
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);		
 		return clusterOfTrajectories;
 	}
-
-
 
 	/**
 	 * This Method calculates approximate clusters using LSH to project Euclidean Distance (L2 Norm).
@@ -547,7 +558,7 @@ public class Traclus {
 		ArrayList<ConcatenatedHashingFuntions> lkBitFunctions = new ArrayList<ConcatenatedHashingFuntions>(l);
 		for(int i=0; i<l; i++)
 		{
-			ConcatenatedHashingFuntions chf = createKConcatenatedHashFunctionsDBH(trajectories, kBits);
+			ConcatenatedHashingFuntions chf = createKConcatenatedHashFunctionsDBH(simplifiedTrajectories, kBits);
 			
 			lkBitFunctions.add(chf); 
 		}
@@ -695,16 +706,14 @@ public class Traclus {
 		 * @param trajectories
 		 * @param l
 		 * @param kBits
+		 * @param isBinaryFeatureVector: Determines wether we get a single real value in the feature vector or a binary vector of k features
 		 * @param r
 		 * @return
 		 */
-		private ArrayList<FeatureVector> generateFeatureVectorsFromDBHHashing(ArrayList<Trajectory> trajectories, ConcatenatedHashingFuntions chf, int kBits) {
-
-
-						
-			//This determines wether we get a single real value in the feature vector or a binary vector of k features
-			boolean binaryFeatureVector = true;
-			ArrayList<FeatureVector> featureVectors = chf.executeHashForFeatureVectors(trajectories, binaryFeatureVector, kBits);
+		private ArrayList<FeatureVector> generateFeatureVectorsFromDBHHashing(ArrayList<Trajectory> trajectories, 
+				ConcatenatedHashingFuntions chf, int kBits, boolean isBinaryFeatureVector) 		
+		{
+			ArrayList<FeatureVector> featureVectors = chf.executeHashForFeatureVectors(trajectories, isBinaryFeatureVector, kBits);
 			return featureVectors;
 		}
 
@@ -721,12 +730,55 @@ public class Traclus {
 			Random r = new Random();
 			ConcatenatedHashingFuntions chf = new ConcatenatedHashingFuntions(kBits);
 			
+			//TODO Delete this, cause it is only for Raos Experiment
+			//Just to try Raos Experiment
+			ArrayList<Integer> listOfPredefinedTrajectoriesToTest = new ArrayList<Integer>();
+			/*
+			listOfPredefinedTrajectoriesToTest.add(2);
+			listOfPredefinedTrajectoriesToTest.add(22);
+			listOfPredefinedTrajectoriesToTest.add(3);
+			listOfPredefinedTrajectoriesToTest.add(70);
+			listOfPredefinedTrajectoriesToTest.add(146);
+			listOfPredefinedTrajectoriesToTest.add(184);
+			listOfPredefinedTrajectoriesToTest.add(181);
+			listOfPredefinedTrajectoriesToTest.add(1);
+			listOfPredefinedTrajectoriesToTest.add(0);
+			listOfPredefinedTrajectoriesToTest.add(100);
+			listOfPredefinedTrajectoriesToTest.add(21);
+			listOfPredefinedTrajectoriesToTest.add(66);
+			listOfPredefinedTrajectoriesToTest.add(4);
+			listOfPredefinedTrajectoriesToTest.add(65);
+			*/
+			
+			/*
+			listOfPredefinedTrajectoriesToTest.add(0);
+			listOfPredefinedTrajectoriesToTest.add(12);
+			int testIndex = 0;
+			*/
+			//Lets just make a set of trajectories from the clusters we actually want
+			//ArrayList<Trajectory> filteredTrajectories = new ArrayList<Trajectory>();
+			//filteredTrajectories.add(trajectories.get(181));
+			
+					
+			//End of Rao Test for Cluster Verification
+			
 			while(!chf.isConcatenationComplete())
 			{
 				//First get 2 random members (trajectories)
 				Trajectory s1 = trajectories.get(r.nextInt(trajectories.size()));
 				Trajectory s2 = trajectories.get(r.nextInt(trajectories.size()));
 				
+				//****************BEGIN TEST***************************************
+				//TODO DELETE This, it is only to test RaoMethods
+				//For test Purposes Only
+				/*
+				 s1 = trajectories.get(listOfPredefinedTrajectoriesToTest.get(testIndex));
+				 testIndex++;
+				 s2 = trajectories.get(listOfPredefinedTrajectoriesToTest.get(testIndex));
+				 testIndex++;
+				 */
+				 //*****************End Of TEST******************
+				 
 				//Create the hashing function and calculate the interval t1-t2
 				HashingFunction newHF = new HashingFunction(s1,s2);
 				newHF.findT1T2(trajectories);
@@ -978,7 +1030,7 @@ public class Traclus {
 	 * @param k : Number of clusters to produce with K-Means.
 	 * @return
 	 */
-	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k) 
+	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k, boolean binary) 
 	{
 		long startHashFunctionTime = System.nanoTime();
 		
@@ -988,52 +1040,58 @@ public class Traclus {
 		
 		long startDBHClusteringProcessing = System.nanoTime();
 		
-		//TODO Refactor this cause this should not be in this method, but I put it here cause Zay needs it
-		//By separation of concerns this should not be inside this method since it is not needed to generate the Feature Vectors
-		ArrayList<ConcatenatedHashingFuntions> lkBitFunctions = new ArrayList<ConcatenatedHashingFuntions>();
-		lkBitFunctions.add(chf);
-		
-		//Only for the use of previous methods
-		ArrayList<HashTable> hashTables = generateHashTablesFromDBHHashing(workingTrajectories, lkBitFunctions, numBits);
-		int minNumElems = 1;
-		boolean merge = false;
-		int mergeRatio = 1;
-		ArrayList<Cluster> listOfDBHApproxClusters = createClustersFromHashTables(workingTrajectories, minNumElems, merge, mergeRatio, hashTables);
-		
-		long stopDBHClusteringProcessing = System.nanoTime();
-		double DBHClusteringTotalProcessing = (stopDBHClusteringProcessing - startDBHClusteringProcessing + hashTotalTime)/1000000000.0;
-		System.out.println("Total DBH Clustering Execution time in seconds: " + (DBHClusteringTotalProcessing));
-		
-		//TODO ENABLE this only in Debug logs
-		/*
-		for(Cluster c: listOfDBHApproxClusters)
+		if(binary)
 		{
-			System.out.println("Pre-Plotted Cluster: " + c.getClusterName());
-		}*/
+			//TODO Refactor this cause this should not be in this method, but I put it here cause Zay needs it
+			//By separation of concerns this should not be inside this method since it is not needed to generate the Feature Vectors
+			ArrayList<ConcatenatedHashingFuntions> lkBitFunctions = new ArrayList<ConcatenatedHashingFuntions>();
+			lkBitFunctions.add(chf);
+			
+			//Only for the use of previous methods
+			ArrayList<HashTable> hashTables = generateHashTablesFromDBHHashing(workingTrajectories, lkBitFunctions, numBits);
+			int minNumElems = 1;
+			boolean merge = false;
+			int mergeRatio = 1;
+			ArrayList<Cluster> listOfDBHApproxClusters = createClustersFromHashTables(workingTrajectories, minNumElems, merge, mergeRatio, hashTables);
+			
+			long stopDBHClusteringProcessing = System.nanoTime();
+			double DBHClusteringTotalProcessing = (stopDBHClusteringProcessing - startDBHClusteringProcessing + hashTotalTime)/1000000000.0;
+			System.out.println("Total DBH Clustering Execution time in seconds: " + (DBHClusteringTotalProcessing));
+			
+			//TODO ENABLE this only in Debug logs
+			/*
+			for(Cluster c: listOfDBHApproxClusters)
+			{
+				System.out.println("Pre-Plotted Cluster: " + c.getClusterName());
+			}*/
+			
+			//Now Plot these clusters
+			TrajectoryPlotter.drawAllClusters(listOfDBHApproxClusters, true, false);
+			ArrayList<Cluster> realClusters = testTrajectoryClustering.getTrueClustersFromTrajectories(workingTrajectories);
+			HashSet<Integer> allConsideredTrajectories = CommonFunctions.getHashSetAllTrajectories(workingTrajectories);
+			boolean printConfusionMatrix = false;
+			System.out.println("***** Clusters Produced directly from DBH Methods *****");
+			testTrajectoryClustering.compareClusters(realClusters, listOfDBHApproxClusters, allConsideredTrajectories, printConfusionMatrix);
+			System.out.println("***** END of Output from Clusters Produced directly from DBH Methods *****");
+			System.out.println("");
+			System.out.println("");
+		}
 		
-		//Now Plot these clusters
-		TrajectoryPlotter.drawAllClusters(listOfDBHApproxClusters, true, false);
 		
-		ArrayList<Cluster> realClusters = testTrajectoryClustering.getTrueClustersFromTrajectories(workingTrajectories);
-		HashSet<Integer> allConsideredTrajectories = CommonFunctions.getHashSetAllTrajectories(workingTrajectories);
-		boolean printConfusionMatrix = false;
-		System.out.println("***** Clusters Produced directly from DBH Methods *****");
-		testTrajectoryClustering.compareClusters(realClusters, listOfDBHApproxClusters, allConsideredTrajectories, printConfusionMatrix);
-		System.out.println("***** END of Output from Clusters Produced directly from DBH Methods *****");
 		
-		System.out.println("");
-		System.out.println("");
+
 		System.out.println("***** Clusters Produced from K-MEANS OVER DBH Methods *****");
+		
 		long startDBHFeatureVectorClusteringTime = System.nanoTime();
-		ArrayList<FeatureVector> AllFeatureVectors = generateFeatureVectorsFromDBHHashing(workingTrajectories, chf, numBits);
+		ArrayList<FeatureVector> AllFeatureVectors = generateFeatureVectorsFromDBHHashing(workingTrajectories, chf, numBits, binary);
 	
 		//TODO Enable this print only in debug mode.
-		/*
+		
 		for(FeatureVector fv: AllFeatureVectors)
 		{
 			System.out.println("Trajectory ID: " + fv.getId() + " Trajectory Feature Vector size: " + fv.features.size() + " vector: " + fv.toString());
 		}
-		*/
+		
 			
 		//Use KMeans to custer
 		ArrayList<Cluster> kmeansClusters = null;
@@ -1461,6 +1519,7 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
+
 
 
 	//Calculate Representative Trajectories.

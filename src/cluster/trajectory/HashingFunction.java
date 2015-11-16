@@ -111,7 +111,12 @@ public class HashingFunction {
 		double dts1 = Trajectory.calculateDTWDistance(x,x1);
 		double dts2 = Trajectory.calculateDTWDistance(x,x2);
 		
+		//TODO ACTIVATE This cause it is the original formula from the paper
 		double hash = (Math.pow(dts1, 2) + Math.pow(ds1s2, 2) - Math.pow(dts2, 2))/(2*ds1s2);
+		
+		//TODO DELETE THIS Is only for test, we want to try without the squared terms
+		//double hash = (dts1 + ds1s2 -dts2)/(2*ds1s2);
+		
 		return hash;
 	}
 
