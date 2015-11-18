@@ -29,6 +29,52 @@ public class FeatureVector implements Clusterable{
 		}
 		return featureVectorAsArray;
 	}
+	
+	public double distanceFrom(FeatureVector other) throws Exception
+	{
+		double distance = 0;
+		if(this.features.size()!=other.features.size())
+		{
+			throw new Exception("Fatal Error, cannot calculate norm of Vectors of different dimensions."); 
+		}else{
+			double squaredDistance = 0;
+			for(int i=0; i<features.size(); i++)
+			{
+				squaredDistance += Math.pow((features.get(i) - other.features.get(i)),2);
+			}
+			distance = Math.sqrt(squaredDistance);
+		}
+		
+		return distance;
+	}
+	
+	/**
+	 * This method is to calculate the L2 distance of two vectors from the stromberglabs kmeans Feature Vectors
+	 * I added it here because stromberlabs does not provide such a method and I did not know where else to locate the code
+	 * Seems to fits with feature vector class
+	 * TODO Move this method to a more appropiated class
+	 * @param fv1
+	 * @param fv2
+	 * @return L2 Distance between 2 Stromberglabs vectors
+	 * @throws Exception
+	 */
+	public static double L2distanceFrom(float[] fv1, float[] fv2) throws Exception
+	{
+		double distance = 0;
+		if(fv1.length!=fv2.length)
+		{
+			throw new Exception("Fatal Error, cannot calculate norm of Vectors of different dimensions."); 
+		}else{
+			double squaredDistance = 0;
+			for(int i=0; i<fv1.length; i++)
+			{
+				squaredDistance += Math.pow((fv1[i] - fv2[i]),2);
+			}
+			distance = Math.sqrt(squaredDistance);
+		}
+		
+		return distance;
+	}
 
 	public int getId() {
 		return id;

@@ -70,7 +70,13 @@ public class ClusterQualityMeterer {
 	
 	//Sigan sigan sigan bailando, sigan sigan, con don Medardo...
 	
-	public static double silhouetteCoefficient(ArrayList<Cluster> setOfClusters) throws Exception
+	/**
+	 * This method calculates the Silhoutte Coefficient over the DTW distance.
+	 * @param setOfClusters : Cluster of Trajectories in the Trajectory Representation
+	 * @return
+	 * @throws Exception
+	 */
+	public static double silhouetteCoefficientDTW(ArrayList<Cluster> setOfClusters) throws Exception
 	{
 		double overallSetSilhoutteCoefficient = 0;
 		int totalElementsInSet = 0;
@@ -97,7 +103,7 @@ public class ClusterQualityMeterer {
 				//We Substracted one cause element is already in the cluster.
 				double finalSilhouetteInternalIndexForElement = silhouetteInternalIndexForElement/(c.elements.size());
 				
-				Cluster similarCluster = findMostSimilarCluster(c, setOfClusters);
+				Cluster similarCluster = findMostSimilarClusterDTW(c, setOfClusters);
 				if(similarCluster==null) throw new Exception("Error finding similar Cluster, null element");
 				
 				double distanceToExternalElements = 0;
@@ -116,7 +122,13 @@ public class ClusterQualityMeterer {
 		return overallSetSilhoutteCoefficient;
 	}
 
-	private static Cluster findMostSimilarCluster(Cluster c, ArrayList<Cluster> setOfClusters) 
+	/**
+	 * Finds the cluster which its centroid is closer to the Query cluster in DTW distance using DBA centroid method.
+	 * @param c
+	 * @param setOfClusters
+	 * @return
+	 */
+	private static Cluster findMostSimilarClusterDTW(Cluster c, ArrayList<Cluster> setOfClusters) 
 	{
 		double minDistanceToOtherCluster = Double.POSITIVE_INFINITY;
 		Cluster similarCluster = null;
@@ -145,6 +157,71 @@ public class ClusterQualityMeterer {
 			e.printStackTrace();
 		}
 		return similarCluster;
+	}
+	
+	public static double silhoutteCoefficientFeatureVector(com.stromberglabs.cluster.Cluster[] featureVectorClusters) throws Exception
+	{
+		double totalSilhouetteCoeficient = 0;
+		double allElementsCounter = 0;
+		for(com.stromberglabs.cluster.Cluster c: featureVectorClusters)
+		{
+			allElementsCounter += c.getItems().size();
+			for(com.stromberglabs.cluster.Clusterable item1 : c.getItems())
+			{
+				double itemInternalSilhouetteCoefficient = 0;
+				float[] item1FeatureVector = item1.getLocation();
+				
+				for(com.stromberglabs.cluster.Clusterable item2 : c.getItems())
+				{
+					float[] item2FeatureVector = item2.getLocation();
+					itemInternalSilhouetteCoefficient = FeatureVector.L2distanceFrom(item1FeatureVector, item2FeatureVector);
+				}
+				//Solve what happens when a cluster has a single element.
+				itemInternalSilhouetteCoefficient = itemInternalSilhouetteCoefficient/c.getItems().size();
+				
+				double itemExternalSilhouetteCoefficient = 0;
+				//Find the most similar cluster
+				com.stromberglabs.cluster.Cluster closestExternalCluster = findClosestExternalClusterToFeatureVector(item1FeatureVector, c, featureVectorClusters);
+				for(com.stromberglabs.cluster.Clusterable externalItem: closestExternalCluster.getItems())
+				{
+					itemExternalSilhouetteCoefficient += FeatureVector.L2distanceFrom(item1FeatureVector, externalItem.getLocation());
+				}
+				itemExternalSilhouetteCoefficient = itemExternalSilhouetteCoefficient/closestExternalCluster.getItems().size();
+				
+				double itemSilhuetteCoefficient = (itemExternalSilhouetteCoefficient - itemInternalSilhouetteCoefficient)/Math.max(itemInternalSilhouetteCoefficient, itemExternalSilhouetteCoefficient);
+				totalSilhouetteCoeficient += itemSilhuetteCoefficient;
+			}
+		}
+		totalSilhouetteCoeficient = totalSilhouetteCoeficient/allElementsCounter;
+		return totalSilhouetteCoeficient;
+	}
+	
+	/**
+	 * Finds the closest EXTERNAL cluster to a given feature vector
+	 * @param fv The query Feature Vector
+	 * @param c  The cluster to which the query Feature Vector belongs to
+	 * @param featureVectorClusters The list of all Clusters of Feature Vectors
+	 * @return ClosestExternalCluster The closest external Feature Vector Cluster with respect to the query Feature Vector
+	 * @throws Exception When feature vectors are of different Dimensions
+	 */
+	public static com.stromberglabs.cluster.Cluster findClosestExternalClusterToFeatureVector(float[] fv, com.stromberglabs.cluster.Cluster c, com.stromberglabs.cluster.Cluster[] featureVectorClusters) throws Exception
+	{
+		com.stromberglabs.cluster.Cluster closestExternalCluster = null;
+		double minimumDistanceToExternalClusterCentroid = Double.POSITIVE_INFINITY;
+		for(com.stromberglabs.cluster.Cluster externalCluster: featureVectorClusters)
+		{
+			if(!c.equals(externalCluster))
+			{
+					double distanceToExternalClusterCentroid = FeatureVector.L2distanceFrom(fv, externalCluster.getClusterMean());
+					if(distanceToExternalClusterCentroid<minimumDistanceToExternalClusterCentroid)
+					{
+						minimumDistanceToExternalClusterCentroid = distanceToExternalClusterCentroid;
+						closestExternalCluster = externalCluster;
+					}
+			}
+		}
+		
+		return closestExternalCluster;
 	}
 	
 }

@@ -38,21 +38,21 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
+		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = true;
-		boolean simplifyTrajectories = true;
+		boolean simplifyTrajectories = false;
 		boolean printDetailedClusters = true;
 		boolean printOutputZayFile = true;
 		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
 		boolean printIntraClusterDistanceMatrix = false;
-		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = true;
+		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = false;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
-		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.LABOMNI;
-		int numberOfPartitionsPerTrajectory = 20; //normal value = 8 //9 for tests with zay
+		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.CROSS;
+		int numberOfPartitionsPerTrajectory = 7; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
 		boolean veryBigData = false;
@@ -390,7 +390,7 @@ public class testTrajectoryClustering {
 		{
 			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
 			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
-			int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			int k = 19; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
@@ -504,17 +504,17 @@ public class testTrajectoryClustering {
 		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
 		try {
-			if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY 
+			/*if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY 
 					|| method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS || method==ClusteringMethod.DBSCAN_DTW 
 					|| method == ClusteringMethod.KMEANS_DTW || method == ClusteringMethod.KMEDOIDS_DTW)
-			{
-				double silhouetteCoefficientGeneratedClusters = ClusterQualityMeterer.silhouetteCoefficient(testClusters);
+			{*/
+				double silhouetteCoefficientGeneratedClusters = ClusterQualityMeterer.silhouetteCoefficientDTW(testClusters);
 				System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficientGeneratedClusters);
-				double silhouetteCoefficientRealClusters = ClusterQualityMeterer.silhouetteCoefficient(realClusters);
+				double silhouetteCoefficientRealClusters = ClusterQualityMeterer.silhouetteCoefficientDTW(realClusters);
 				System.out.println("Internal Silhouette Coefficient Real Set of Clusters: " + silhouetteCoefficientRealClusters);
-			}else{
+			/*}else{
 				System.out.println("Silhoutte Coefficient only defined in Code for methods that use DTW distance.");
-			}
+			}*/
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			System.out.println("Hey Error: " + e1.getMessage());
@@ -533,6 +533,7 @@ public class testTrajectoryClustering {
 		{
 			TrajectoryPlotter.drawAllClusters(testClusters, false, false);
 			TrajectoryPlotter.drawAllClustersInSameGraph(testClusters, false, "");
+			//TrajectoryPlotter.drawAllClusters(realClusters, false, false);
 			TrajectoryPlotter.drawAllClustersInSameGraph(realClusters, true, "Real Clusters");
 			if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories)
 			{

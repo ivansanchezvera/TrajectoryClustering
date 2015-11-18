@@ -7,6 +7,8 @@ import com.stromberglabs.cluster.Cluster;
 import com.stromberglabs.cluster.Clusterable;
 import com.stromberglabs.cluster.KMeansClusterer;
 
+import extras.TimeKeeping;
+
 public class Kmeans {
 
 	public Kmeans() {
@@ -23,10 +25,20 @@ public class Kmeans {
 	
 	public static ArrayList<cluster.trajectory.Cluster> executeVectorKmeans(List<? extends Clusterable> elementsToCluster, ArrayList<Trajectory> trajectories, int k) throws Exception
 	{
+		long startTimeKmeans = System.nanoTime();
+		
 		ArrayList<cluster.trajectory.Cluster> kmeansClusters = new ArrayList<cluster.trajectory.Cluster>();
 		
 		//here call kmeans
 		com.stromberglabs.cluster.Cluster[] kmeansCluster = Kmeans.execute(elementsToCluster, k);
+		
+		//This is the output of the L2 SilhouetteCoefficient
+		long startTimeKmeansSilhouette = System.nanoTime();
+		double L2silhouetteCoefficientGeneratedFVClusters = ClusterQualityMeterer.silhoutteCoefficientFeatureVector(kmeansCluster);
+		System.out.println("Internal L2 Silhouette Coefficient Generated Set of Clusters as Feature Vectors: " + L2silhouetteCoefficientGeneratedFVClusters);
+		long stopTimeSilhouette = System.nanoTime();
+		long totalSilhouetteTime = stopTimeSilhouette - startTimeKmeansSilhouette;
+		TimeKeeping.wastedTime += totalSilhouetteTime;
 		
 		for(com.stromberglabs.cluster.Cluster c:kmeansCluster)
 		{
@@ -66,6 +78,11 @@ public class Kmeans {
 			//TODO enable this in debug mode only.
 			//System.out.println("Binary Vector cluster name: "+ tempMyCluster.getClusterName());
 		}
+		
+		long stopTimeKmeans = System.nanoTime();
+		long totalKmeansTime = stopTimeKmeans - startTimeKmeans - totalSilhouetteTime;
+		System.out.println("Time spent in Silhouette Coefficient Calculation: " + totalSilhouetteTime/1000000000.0);
+		System.out.println("Kmeans Over Feature Vector time in seconds (excluding Silhouette time): " + totalKmeansTime/1000000000.0);
 		
 		return kmeansClusters;
 	}
