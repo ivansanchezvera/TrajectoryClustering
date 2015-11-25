@@ -23,6 +23,11 @@ import extras.AuxiliaryFunctions;
 
 public class testTrajectoryClustering {
 	
+	public static ArrayList<Double> silhouetteValues = new ArrayList<Double>();
+	public static ArrayList<Float> NMIValues = new ArrayList<Float>();
+	public static ArrayList<Double> timesDouglasPeucker = new ArrayList<Double>();
+	public static ArrayList<Double> timesClustering = new ArrayList<Double>();
+	
 	static ArrayList<Integer> representedOriginalTraj = new ArrayList<Integer>();
 	
 	public testTrajectoryClustering() {
@@ -50,6 +55,7 @@ public class testTrajectoryClustering {
 		boolean printIntraClusterDistanceMatrix = false;
 		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = false;
 		boolean saveFeatureVectorsToFile = true;
+		boolean calculateSilhouetteCoefficient = false;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.CROSS;
@@ -59,11 +65,39 @@ public class testTrajectoryClustering {
 		boolean veryBigData = false;
 		int numTrajectoryBigDataset = 500;
 		
-		CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, simplifyTrajectories, 
-				simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, 
-				printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, printDetailedClusters, 
-				printIntraClusterDistanceMatrix, saveFeatureVectorsToFile);
+		boolean runMultipleExperiments = true;
+		int numberOfExperiments = 5;
 		
+		if(runMultipleExperiments)
+		{
+			for(int i = 0; i<numberOfExperiments; i++)
+			{	
+				CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, 
+						simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
+						numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
+						printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+			}
+			
+			System.out.println("NMI Scores: " + testTrajectoryClustering.NMIValues);
+			if(calculateSilhouetteCoefficient)
+			{
+				System.out.println("Silhouette Scores: " + testTrajectoryClustering.silhouetteValues);
+			}else{
+				System.out.println("Silhouette calculation deactivativated");
+			}
+			if(simplifyTrajectories)
+			{
+				System.out.println("Douglas Peucker Times: " + testTrajectoryClustering.timesDouglasPeucker);
+			}else{
+				System.out.println("Trajectory Simplification deactivativated");
+			}
+			System.out.println("Clustering Times: " + testTrajectoryClustering.timesClustering);
+		}else{
+			CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, 
+					simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
+					numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
+					printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+		}
 		//to evaluate the numbers of buckets produced by different numbers of hashing functions
 		/*
 		boolean plotHashFuntionsToNumBucketsGraph = true;
@@ -83,7 +117,7 @@ public class testTrajectoryClustering {
 	 * @param method 
 	 * 
 	 */
-	private static void starkeyElk93Experiment(ClusteringMethod method) {
+	private static void starkeyElk93Experiment(ClusteringMethod method, boolean calculateSilhouetteCoefficient) {
 		// TODO Auto-generated method stub
 		
 		ArrayList<Trajectory> testTrajectories;
@@ -169,7 +203,7 @@ public class testTrajectoryClustering {
 		//ArrayList<Cluster> testClusters = traclus.executeDensityBasedClusterOverTrajectories();
 		
 		//For Kmeans for Whole trajectories
-		ArrayList<Cluster> testClusters = traclus.executeKMeansClusterOverTrajectories(13, minLins);
+		ArrayList<Cluster> testClusters = traclus.executeKMeansClusterOverTrajectories(13, minLins, calculateSilhouetteCoefficient);
 		
 		//Here print Real cluster data, we do not have those labels yet here
 
@@ -180,7 +214,7 @@ public class testTrajectoryClustering {
 			boolean plotTrajectories, boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters, boolean simplifyTrajectories, 
 			SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, 
 			boolean printOutputZayToFile, boolean printOutputZayToScreen, boolean printConfusionMatrix, boolean printDetailedClusters, 
-			boolean printIntraClusterDistanceMatrix, boolean saveFeatureVectorsToFile) {
+			boolean printIntraClusterDistanceMatrix, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) {
 
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
@@ -348,7 +382,7 @@ public class testTrajectoryClustering {
 		
 
 		//For Kmeans for Whole trajectories
-		testClusters = traclus.executeKMeansClusterOverTrajectories(15, minNumElems);
+		testClusters = traclus.executeKMeansClusterOverTrajectories(15, minNumElems, calculateSilhouetteCoefficient);
 		}
 
 		if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
@@ -384,7 +418,7 @@ public class testTrajectoryClustering {
 		
 		traclus = new Traclus(workingTrajectories);
 		//I need to establish better parameters
-		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile);
+		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
 		}
 		
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS)
@@ -395,7 +429,7 @@ public class testTrajectoryClustering {
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
-			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile);
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
 		}
 		
 		
@@ -481,7 +515,7 @@ public class testTrajectoryClustering {
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			
 			//For LSH EUCLIDEAN
-			testClusters = traclus.executeLSHEuclideanSlidingWindow(numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k);
+			testClusters = traclus.executeLSHEuclideanSlidingWindow(numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k, calculateSilhouetteCoefficient);
 			
 		}
 		
@@ -504,25 +538,27 @@ public class testTrajectoryClustering {
 
 		compareClusters(realClusters, testClusters, allConsideredTrajectories, printConfusionMatrix);
 		
-		try {
-			/*if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY 
-					|| method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS || method==ClusteringMethod.DBSCAN_DTW 
-					|| method == ClusteringMethod.KMEANS_DTW || method == ClusteringMethod.KMEDOIDS_DTW)
-			{*/
-				double silhouetteCoefficientGeneratedClusters = ClusterQualityMeterer.silhouetteCoefficientDTW(testClusters);
-				System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficientGeneratedClusters);
-				double silhouetteCoefficientRealClusters = ClusterQualityMeterer.silhouetteCoefficientDTW(realClusters);
-				System.out.println("Internal Silhouette Coefficient Real Set of Clusters: " + silhouetteCoefficientRealClusters);
-			/*}else{
-				System.out.println("Silhoutte Coefficient only defined in Code for methods that use DTW distance.");
-			}*/
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			System.out.println("Hey Error: " + e1.getMessage());
-			e1.printStackTrace();
+		if(calculateSilhouetteCoefficient)
+		{
+			try {
+				/*if(method==ClusteringMethod.DBH_APPROXIMATION_DTW || method==ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY 
+						|| method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS || method==ClusteringMethod.DBSCAN_DTW 
+						|| method == ClusteringMethod.KMEANS_DTW || method == ClusteringMethod.KMEDOIDS_DTW)
+				{*/
+					double silhouetteCoefficientGeneratedClusters = ClusterQualityMeterer.silhouetteCoefficientDTW(testClusters);
+					System.out.println("Internal Silhouette Coefficient Generated Set of Clusters: " + silhouetteCoefficientGeneratedClusters);
+					testTrajectoryClustering.silhouetteValues.add(silhouetteCoefficientGeneratedClusters);
+					double silhouetteCoefficientRealClusters = ClusterQualityMeterer.silhouetteCoefficientDTW(realClusters);
+					System.out.println("Internal Silhouette Coefficient Real Set of Clusters: " + silhouetteCoefficientRealClusters);
+				/*}else{
+					System.out.println("Silhoutte Coefficient only defined in Code for methods that use DTW distance.");
+				}*/
+			} catch (Exception e1) {
+				System.out.println("Hey Error: " + e1.getMessage());
+				e1.printStackTrace();
+			}
 		}
-		
-		
+			
 		//Print Output for Zay to run other cluster statistics in Phyton
 		if(printOutputZayToFile)
 		{
@@ -928,6 +964,7 @@ public class testTrajectoryClustering {
 		System.out.println("Accuracy: 	" +  methodAccuracy);
 		System.out.println("F-Measure: 	" +  methodFMeasure);
 		System.out.println("Normalized Mutual Information (NMI): " +  methodNormalizedMutualInfo);
+		testTrajectoryClustering.NMIValues.add(methodNormalizedMutualInfo);
 		
 		//Now print Confusion Matrix
 		int lenghtOfRowLine = confusionMatrix.length();

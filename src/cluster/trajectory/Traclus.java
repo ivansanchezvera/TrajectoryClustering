@@ -97,7 +97,7 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		return clusterOfTrajectories;
 	}
 	
@@ -120,11 +120,11 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKMeansClusterOverTrajectories(int k, int minNumElems)
+	public ArrayList<Cluster> executeKMeansClusterOverTrajectories(int k, int minNumElems, boolean calculateSilhouetteCoefficient)
 	{
 		//ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
 		
@@ -136,12 +136,12 @@ public class Traclus {
 		
 		//For new Rao Approach, do clustering over trajectories.
 		//Form clustering over DTW
-		clusterOfTrajectories = clusterTrajectoriesKMeansEuclidean(workingTrajectories, k);		
+		clusterOfTrajectories = clusterTrajectoriesKMeansEuclidean(workingTrajectories, k, calculateSilhouetteCoefficient);		
 		
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 		return clusterOfTrajectories;
 	}
@@ -162,7 +162,7 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 		return clusterOfTrajectories;
 	}
@@ -182,7 +182,7 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 		return clusterOfTrajectories;
 	}
@@ -216,12 +216,12 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector, boolean saveFeatureVectorsToFile) {
+	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) {
 		
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -229,7 +229,7 @@ public class Traclus {
 		
 		//As suggested by Zay, lets try to do K means over the Feature vectors generated from dbh
 		try {
-			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector, saveFeatureVectorsToFile);
+			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
 			e.printStackTrace();
@@ -271,7 +271,7 @@ public class Traclus {
 		double finalTimeInSeconds = (stopTime - startTime - TimeKeeping.wastedTime)/1000000000.0;
 		System.out.println("Non clustering time: " + TimeKeeping.wastedTime/1000000000.0);
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 		return clusterOfTrajectories;
 	}
@@ -285,7 +285,7 @@ public class Traclus {
 	 * @param k 
 	 * @return
 	 */
-	public ArrayList<Cluster> executeLSHEuclideanSlidingWindow(int numHashingFunctions, int lshFunctionWindowSize, int minNumElems, int slidingWindowSize, int k) 
+	public ArrayList<Cluster> executeLSHEuclideanSlidingWindow(int numHashingFunctions, int lshFunctionWindowSize, int minNumElems, int slidingWindowSize, int k, boolean calculateSilhouetteCoefficient) 
 		{
 
 		ArrayList<Trajectory> workingTrajectories = trajectories;
@@ -294,7 +294,7 @@ public class Traclus {
 		
 		try {
 
-			clusterOfTrajectories = approximateClustersLSHEuclideanWindowSize(workingTrajectories, numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k);
+			clusterOfTrajectories = approximateClustersLSHEuclideanWindowSize(workingTrajectories, numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k, calculateSilhouetteCoefficient);
 
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
@@ -305,7 +305,7 @@ public class Traclus {
 		double finalTimeInSeconds = (stopTime - startTime - TimeKeeping.wastedTime)/1000000000.0;
 		System.out.println("Non clustering time: " + TimeKeeping.wastedTime/1000000000.0);
 		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
-		
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 	
 		return clusterOfTrajectories;
@@ -406,7 +406,8 @@ public class Traclus {
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
 		System.out.println("Trajectory Simplification Execution time in seconds: " + (finalTimeInSeconds));
-				
+		testTrajectoryClustering.timesDouglasPeucker.add(finalTimeInSeconds);
+		
 		return setOfSimplifiedTrajectories;
 	}
 	
@@ -900,7 +901,7 @@ public class Traclus {
 	}
 
 	private ArrayList<Cluster> approximateClustersLSHEuclideanWindowSize(ArrayList<Trajectory> workingTrajectories, int numHashingFunctions,
-			int lshFunctionWindowSize, int minNumElems, int slidingWindowSize, int k) 
+			int lshFunctionWindowSize, int minNumElems, int slidingWindowSize, int k, boolean calculateSilhouetteCoefficient) 
 		{
 		
 		ArrayList<LocalitySensitiveHashing> allHashFunctions = new ArrayList<LocalitySensitiveHashing>();
@@ -1009,7 +1010,7 @@ public class Traclus {
 		//Use KMeans
 		ArrayList<Cluster> kmeansClusters = null;
 		try {
-			kmeansClusters = Kmeans.executeVectorKmeans(AllFeatureVectors, workingTrajectories, k);
+			kmeansClusters = Kmeans.executeVectorKmeans(AllFeatureVectors, workingTrajectories, k, calculateSilhouetteCoefficient);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
@@ -1032,10 +1033,11 @@ public class Traclus {
 	 * @param numBits : Number of bits to produce with DBH hashing for each trajectory signature or vector. 
 	 * This is also the same number of concatenated DBH hash fucntions to use with the DBH process.
 	 * @param k : Number of clusters to produce with K-Means.
+	 * @param calculateSilhouetteCoefficient 
 	 * @return
 	 */
 	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k, 
-			boolean binary, boolean saveFeatureVectorsToFile) 
+			boolean binary, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) 
 	{
 		long startHashFunctionTime = System.nanoTime();
 		
@@ -1088,10 +1090,11 @@ public class Traclus {
 
 		System.out.println("***** Clusters Produced from K-MEANS OVER DBH Methods *****");
 		
-		long startDBHFeatureVectorClusteringTime = System.nanoTime();
+		long startDBHFeatureVectorGenerationTime = System.nanoTime();
 		ArrayList<FeatureVector> AllFeatureVectors = generateFeatureVectorsFromDBHHashing(workingTrajectories, chf, numBits, binary);
-	
-		//TODO Enable this print only in debug mode.
+		long stopDBHFeatureVectorGenerationTime = System.nanoTime();
+		double DBHFeatureVectorGenerationTimeTotalProcessing = stopDBHFeatureVectorGenerationTime - startDBHFeatureVectorGenerationTime;
+		System.out.println("Total DBH Feature Vector Generation time in seconds: " + (DBHFeatureVectorGenerationTimeTotalProcessing/1000000000.0));
 		
 		String allVectorsString = "";
 		if(saveFeatureVectorsToFile)
@@ -1115,16 +1118,18 @@ public class Traclus {
 		
 			
 		//Use KMeans to custer
+		long startDBHFeatureVectorClusteringTime = System.nanoTime();
 		ArrayList<Cluster> kmeansClusters = null;
 		try {
-			kmeansClusters = Kmeans.executeVectorKmeans(AllFeatureVectors, workingTrajectories, k);
+			kmeansClusters = Kmeans.executeVectorKmeans(AllFeatureVectors, workingTrajectories, k, calculateSilhouetteCoefficient);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 		long stopDBHFeatureVectorClusteringTime = System.nanoTime();
-		double DBHFeatureVectorClusteringTotalProcessing = (stopDBHFeatureVectorClusteringTime - startDBHFeatureVectorClusteringTime + hashTotalTime)/1000000000.0;
+		double DBHFeatureVectorClusteringTotalProcessing = (stopDBHFeatureVectorClusteringTime - startDBHFeatureVectorClusteringTime + DBHFeatureVectorGenerationTimeTotalProcessing+ hashTotalTime)/1000000000.0;
 		System.out.println("Total DBH Feature Vector Clustering Execution time in seconds: " + (DBHFeatureVectorClusteringTotalProcessing));
+		testTrajectoryClustering.timesClustering.add(DBHFeatureVectorClusteringTotalProcessing);
 		return kmeansClusters;
 
 	}
@@ -1318,12 +1323,12 @@ public class Traclus {
 	 * @param k
 	 * @return
 	 */
-	private  ArrayList<Cluster> clusterTrajectoriesKMeansEuclidean(ArrayList<Trajectory> simplifiedTrajectories, int k)
+	private  ArrayList<Cluster> clusterTrajectoriesKMeansEuclidean(ArrayList<Trajectory> simplifiedTrajectories, int k, boolean calculateSilhouetteCoefficient)
 	{
 		
 		ArrayList<Cluster> kmeansClusters = null;
 		try {
-			kmeansClusters = Kmeans.executeVectorKmeans(simplifiedTrajectories, simplifiedTrajectories, k);
+			kmeansClusters = Kmeans.executeVectorKmeans(simplifiedTrajectories, simplifiedTrajectories, k, calculateSilhouetteCoefficient);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
