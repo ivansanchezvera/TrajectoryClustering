@@ -38,10 +38,10 @@ public class testTrajectoryClustering {
 	 */
 	public static void main(String[] args) {
 		
-		ClusteringMethod method = ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN;
+		ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
 		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 		//starkeyElk93Experiment(method);
-		boolean plotTrajectories = true;
+		boolean plotTrajectories = false;
 		boolean simplifyTrajectories = false;
 		boolean printDetailedClusters = true;
 		boolean printOutputZayFile = true;
@@ -49,6 +49,7 @@ public class testTrajectoryClustering {
 		boolean printConfusionMatrix = false;
 		boolean printIntraClusterDistanceMatrix = false;
 		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = false;
+		boolean saveFeatureVectorsToFile = true;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.CROSS;
@@ -61,7 +62,7 @@ public class testTrajectoryClustering {
 		CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, simplifyTrajectories, 
 				simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, numTrajectoryBigDataset, 
 				printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, printDetailedClusters, 
-				printIntraClusterDistanceMatrix);
+				printIntraClusterDistanceMatrix, saveFeatureVectorsToFile);
 		
 		//to evaluate the numbers of buckets produced by different numbers of hashing functions
 		/*
@@ -179,7 +180,7 @@ public class testTrajectoryClustering {
 			boolean plotTrajectories, boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters, boolean simplifyTrajectories, 
 			SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, 
 			boolean printOutputZayToFile, boolean printOutputZayToScreen, boolean printConfusionMatrix, boolean printDetailedClusters, 
-			boolean printIntraClusterDistanceMatrix) {
+			boolean printIntraClusterDistanceMatrix, boolean saveFeatureVectorsToFile) {
 
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
@@ -383,7 +384,7 @@ public class testTrajectoryClustering {
 		
 		traclus = new Traclus(workingTrajectories);
 		//I need to establish better parameters
-		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector);
+		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile);
 		}
 		
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS)
@@ -394,7 +395,7 @@ public class testTrajectoryClustering {
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
-			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector);
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile);
 		}
 		
 		

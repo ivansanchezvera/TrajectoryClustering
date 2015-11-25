@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Random;
 
 import fastdtw.com.dtw.DTW;
+import fastdtw.com.dtw.DTWConstrain;
+import fastdtw.com.dtw.FastDTW;
+import fastdtw.com.dtw.LinearWindow;
+import fastdtw.com.dtw.ParallelogramWindow;
+import fastdtw.com.dtw.SearchWindow;
 import fastdtw.com.timeseries.TimeSeries;
 import fastdtw.com.util.DistanceFunction;
 import fastdtw.com.util.DistanceFunctionFactory;
@@ -594,6 +599,58 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		double dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, distFn);
 		return dtwEuclideanCost;
 	}
+	
+	/**
+	 * This class uses several constraints to DTW (thanks Stan Salvador).
+	 * Constrains include search radio (fix to 25% of longest timeseries) in FastDTW, Parallelogram and 
+	 * Search window (set to half the length of each TS).
+	 * @param t first trajectory
+	 * @param t2 second trajectory
+	 * @param constrain : Enum that defines the constrain to use (FastDTW, Parallelogram or WindowSearch).
+	 * @return DTW cost of aligning the 2 trajectories using Euclidean distance as a metric
+	 */
+	public static double calculateDTWDistanceContraints(Trajectory t, Trajectory t2, DTWConstrain constrain) 
+	{
+		// TODO Auto-generated method stub
+		  final DistanceFunction distFn = DistanceFunctionFactory.getDistFnByName("EuclideanDistance"); 
+		TimeSeries ts1 = new TimeSeries(t);
+		TimeSeries ts2 = new TimeSeries(t2);
+		
+		//double dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, distFn);
+		double dtwEuclideanCost = Double.POSITIVE_INFINITY;
+		TimeSeries longestTimeSeries = (ts1.numOfPts()>=ts2.numOfPts()?ts1:ts2);
+		int searchRadius = longestTimeSeries.numOfPts()/4;
+		
+		switch (constrain) {
+		case fastDTW:
+			dtwEuclideanCost = FastDTW.getWarpDistBetween(ts1, ts2, searchRadius, distFn);
+			break;
+		case parallelogram:
+			//TODO Correct error here, IDK what is happening.
+			//Make the parallelogram window equal to 25 percent of the lengh of the biggest trajectory
+			searchRadius = 1;
+			ParallelogramWindow pw = new ParallelogramWindow(ts1, ts2, searchRadius);
+			dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, pw, distFn);
+			break;
+		case sakoeChubaBand:
+			searchRadius = longestTimeSeries.numOfPts()/10;
+			LinearWindow lw = new LinearWindow(ts1, ts2, searchRadius);
+			dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, lw, distFn);
+			break;
+		case searchWindow:
+			//TODO Correct error here, IDK what is happening.
+			SearchWindow window = new SearchWindow(t.elements.size()/4, t2.elements.size()/4) {
+			};
+			dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, window, distFn);
+			break;
+		default:
+			dtwEuclideanCost = FastDTW.getWarpDistBetween(ts1, ts2, searchRadius, distFn);
+			break;
+		}
+		
+		return dtwEuclideanCost;
+	}
+
 
 	public int getTrajectoryId() {
 		return id;

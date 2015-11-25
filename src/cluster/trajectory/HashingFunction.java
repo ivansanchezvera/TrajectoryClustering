@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
 
+import fastdtw.com.dtw.DTWConstrain;
+
 /**
  * This class creates a single instance of a Hashing function.
  * We use an instance of a hashing function to produce hash tables
@@ -107,9 +109,16 @@ public class HashingFunction {
 	 * @return Double: value of hash.
 	 */
 	public double hash(Trajectory x) {
-				
+			
+		//TODO Uncommment this cause it is the original code.
 		double dts1 = Trajectory.calculateDTWDistance(x,x1);
 		double dts2 = Trajectory.calculateDTWDistance(x,x2);
+		
+		
+		//TODO Comment this cause it is only a test
+		//Lets Try constraint distance
+		//double dts1 = Trajectory.calculateDTWDistanceContraints(x,x1,DTWConstrain.fastDTW);
+		//double dts2 = Trajectory.calculateDTWDistanceContraints(x,x2,DTWConstrain.fastDTW);
 		
 		//TODO ACTIVATE This cause it is the original formula from the paper
 		double hash = (Math.pow(dts1, 2) + Math.pow(ds1s2, 2) - Math.pow(dts2, 2))/(2*ds1s2);

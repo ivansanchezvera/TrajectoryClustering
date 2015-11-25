@@ -122,7 +122,7 @@ abstract public class SearchWindow
 
 
    // PROTECTED FUNCTIONS
-   //    Expands the current window by a s pecified radius.
+   //    Expands the current window by a specified radius.
    protected final void expandWindow(int radius)
    {
       if (radius > 0)
@@ -282,7 +282,7 @@ abstract public class SearchWindow
    }  // end expandWindow(.)
 
 
-   // Raturns true if the window is modified.
+   // Returns true if the window is modified.
    protected final void markVisited(int col, int row)
    {
       if (minValues[col] == -1)       // first value is entered in the column

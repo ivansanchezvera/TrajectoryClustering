@@ -19,6 +19,7 @@ import cluster.trajectory.*;
 import com.stromberglabs.cluster.KMeansClusterer;
 
 import extras.AuxiliaryFunctions;
+import extras.GetPropertyValues;
 import extras.TimeKeeping;
 import fastdtw.com.dtw.DTW;
 import graphics.TrajectoryPlotter;
@@ -220,7 +221,7 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector) {
+	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector, boolean saveFeatureVectorsToFile) {
 		
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -228,7 +229,7 @@ public class Traclus {
 		
 		//As suggested by Zay, lets try to do K means over the Feature vectors generated from dbh
 		try {
-			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector);
+			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector, saveFeatureVectorsToFile);
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
 			e.printStackTrace();
@@ -1033,13 +1034,15 @@ public class Traclus {
 	 * @param k : Number of clusters to produce with K-Means.
 	 * @return
 	 */
-	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k, boolean binary) 
+	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k, 
+			boolean binary, boolean saveFeatureVectorsToFile) 
 	{
 		long startHashFunctionTime = System.nanoTime();
 		
 		ConcatenatedHashingFuntions chf = createKConcatenatedHashFunctionsDBH(trajectories, numBits);
 		long stopHashFunctionTime = System.nanoTime();
 		long hashTotalTime = stopHashFunctionTime - startHashFunctionTime;
+		System.out.println("Time spent just in Hashing (in seconds): " + hashTotalTime/1000000000.0);
 		
 		long startDBHClusteringProcessing = System.nanoTime();
 		
@@ -1090,9 +1093,24 @@ public class Traclus {
 	
 		//TODO Enable this print only in debug mode.
 		
-		for(FeatureVector fv: AllFeatureVectors)
+		String allVectorsString = "";
+		if(saveFeatureVectorsToFile)
 		{
-			System.out.println("Trajectory ID: " + fv.getId() + " Trajectory Feature Vector size: " + fv.features.size() + " vector: " + fv.toString());
+			for(FeatureVector fv: AllFeatureVectors)
+			{
+				String thisFeatureVectorString = "Trajectory ID: " + fv.getId() + " Trajectory Feature Vector size: " + fv.features.size() + " vector: " + fv.toString() +"\n";
+				//TODO Move next line to debug log only
+				//System.out.print(thisFeatureVectorString);
+				allVectorsString = allVectorsString.concat(thisFeatureVectorString);
+			}
+			String path;
+			try {
+				path = GetPropertyValues.getPropValues("Feature_Vector_File");
+				AuxiliaryFunctions.printStringToFile(allVectorsString, "FeatureVectors.txt", path);
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+				e.printStackTrace();
+			}
 		}
 		
 			
