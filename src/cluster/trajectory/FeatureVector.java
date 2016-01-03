@@ -151,5 +151,90 @@ public class FeatureVector implements Clusterable{
 		return featuresInString;
 	}
 
+	/**
+	 * This method Normalizes features for real valued vectors, so no feature takes over in importance.
+	 * @throws Exception: When feature vectors size don't match the reference vectors size
+
+	 */
+	public void normalize(FeatureVector maxVals, FeatureVector minVals, float floor, float ceil) throws Exception {
+		 /** Lazyweb answer: To convert a value x from [minimum..maximum] to [floor..ceil]:
+			 * General case:
+			 * normalized_x = ((ceil - floor) * (x - minimum))/(maximum - minimum) + floor
+			 */
+	
+		if(features.size()!=maxVals.features.size() || features.size()!=minVals.features.size())
+		{
+			System.err.println("Fatal Error while normalizing. Feature Vector and reference vectors are of different size!");
+			throw new Exception("Fatal Error while normalizing. Feature Vector and reference vectors are of different size!");
+		}
+		
+		for(int i=0; i<features.size(); i++)
+		{
+			float normalized = ((ceil-floor)*(features.get(i)-minVals.getFeatures().get(i)))/ 
+					((maxVals.getFeatures().get(i)) - minVals.getFeatures().get(i)) + floor;
+			features.set(i, normalized);
+		}
+	}
+	
+	public static ArrayList<FeatureVector> normalizeAll(ArrayList<FeatureVector> allVectors, FeatureVector maxRefFV, FeatureVector minRefFV, float floor, float ceil) throws Exception
+	{
+		ArrayList<FeatureVector> normalizedVectors = new ArrayList<FeatureVector>();
+		
+		for(FeatureVector fv: allVectors)
+		{
+			fv.normalize(maxRefFV, minRefFV, floor, ceil);
+			normalizedVectors.add(fv);
+		}
+		return normalizedVectors;
+	}
+
+	/**
+	 * This method calculates and returns the max and min values of each Feature in a List of Feature Vectors
+	 * Note: All feature Vectors on the list must be of same size, otherwise and error is thrown
+	 * @param allFeatureVectors : List of feature Vectors from which to calculate the Max
+	 * @return A List with 2 feature vectors containing all max and min values for each feature
+	 * @throws Exception: Error when not all feature vectors have the same number of features.
+	 */
+	public static ArrayList<FeatureVector> createReferenceVectors(ArrayList<FeatureVector> allFeatureVectors) throws Exception 
+	{
+		ArrayList<FeatureVector> referenceFeatureVectors = new ArrayList<FeatureVector>();
+		FeatureVector maxRefFV = new FeatureVector(0);
+		FeatureVector minRefFV = new FeatureVector(-1);
+		
+		int maxIndex = allFeatureVectors.get(0).getFeatures().size();
+		
+		for(int i=0; i<maxIndex; i++)
+		{
+			float tempMaxFeatureVal = Float.NEGATIVE_INFINITY;
+			float tempMinFeatureVal = Float.POSITIVE_INFINITY;
+			for(FeatureVector fv: allFeatureVectors)
+			{
+				if(fv.getFeatures().size()!=maxIndex)
+				{
+					throw new Exception("Fatal Error, feature vectors differ in size on creating Reference vector Method.");
+				}
+				
+				float tempFeatureVal = fv.features.get(i);
+				
+				if(tempFeatureVal>tempMaxFeatureVal)
+				{
+					tempMaxFeatureVal = tempFeatureVal;
+				}
+				
+				if(tempFeatureVal<tempMinFeatureVal)
+				{
+					tempMinFeatureVal = tempFeatureVal;
+				}
+			}
+			maxRefFV.features.add(tempMaxFeatureVal);
+			minRefFV.features.add(tempMinFeatureVal);
+		}
+		
+		referenceFeatureVectors.add(maxRefFV);
+		referenceFeatureVectors.add(minRefFV);
+		
+		return referenceFeatureVectors;
+	}
+
 	
 }

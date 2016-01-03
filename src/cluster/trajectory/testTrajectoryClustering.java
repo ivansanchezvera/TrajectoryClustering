@@ -48,8 +48,8 @@ public class testTrajectoryClustering {
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = false;
 		boolean simplifyTrajectories = false;
-		boolean printDetailedClusters = true;
-		boolean printOutputZayFile = true;
+		boolean printDetailedClusters = false;
+		boolean printOutputZayFile = false;
 		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
 		boolean printIntraClusterDistanceMatrix = false;
@@ -448,7 +448,7 @@ public class testTrajectoryClustering {
 			int minNumElems = 1;
 			
 			//Parameters for K-Medoids
-			int k = 15;
+			int k = 19;
 			
 			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
 			

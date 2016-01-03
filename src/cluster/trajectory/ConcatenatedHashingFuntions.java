@@ -111,7 +111,7 @@ public class ConcatenatedHashingFuntions {
 					double hash =  h.getCalculatedHashes().get(j);
 					hashResultDoubleFV.add((float) hash);
 				}
-				fv.setFeatures(hashResultDoubleFV);			
+				fv.setFeatures(hashResultDoubleFV);	
 			}
 			hashedTrajectoriesAsFeatureVectors.add(fv);
 		}

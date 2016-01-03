@@ -620,10 +620,11 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		double dtwEuclideanCost = Double.POSITIVE_INFINITY;
 		TimeSeries longestTimeSeries = (ts1.numOfPts()>=ts2.numOfPts()?ts1:ts2);
 		int searchRadius = longestTimeSeries.numOfPts()/4;
+		//int searchRadius = 0;
 		
 		switch (constrain) {
 		case fastDTW:
-			dtwEuclideanCost = FastDTW.getWarpDistBetween(ts1, ts2, searchRadius, distFn);
+			dtwEuclideanCost = FastDTW.getWarpDistBetween(ts1, ts2, distFn);
 			break;
 		case parallelogram:
 			//TODO Correct error here, IDK what is happening.

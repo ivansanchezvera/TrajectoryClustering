@@ -1035,9 +1035,10 @@ public class Traclus {
 	 * @param k : Number of clusters to produce with K-Means.
 	 * @param calculateSilhouetteCoefficient 
 	 * @return
+	 * @throws Exception : When Normalization Fails
 	 */
 	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k, 
-			boolean binary, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) 
+			boolean binary, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) throws Exception 
 	{
 		long startHashFunctionTime = System.nanoTime();
 		
@@ -1094,7 +1095,26 @@ public class Traclus {
 		ArrayList<FeatureVector> AllFeatureVectors = generateFeatureVectorsFromDBHHashing(workingTrajectories, chf, numBits, binary);
 		long stopDBHFeatureVectorGenerationTime = System.nanoTime();
 		double DBHFeatureVectorGenerationTimeTotalProcessing = stopDBHFeatureVectorGenerationTime - startDBHFeatureVectorGenerationTime;
+	
 		System.out.println("Total DBH Feature Vector Generation time in seconds: " + (DBHFeatureVectorGenerationTimeTotalProcessing/1000000000.0));
+	
+		//*******************************Normalization**********************************
+		//Normalize only for real values
+		double DBHFeatureVectorNormalizationTimeTotalProcessing = 0;
+		if(!binary)
+		{
+			long startDBHFeatureVectorNormalizationTime = System.nanoTime();
+			//Create reference feature vectors for normalization
+			ArrayList<FeatureVector> referenceFeatureVectors =  FeatureVector.createReferenceVectors(AllFeatureVectors);
+			FeatureVector maxRefFV = referenceFeatureVectors.get(0);
+			FeatureVector minRefFV = referenceFeatureVectors.get(1);
+			AllFeatureVectors = FeatureVector.normalizeAll(AllFeatureVectors, maxRefFV, minRefFV, 0, 1); 
+			long stopDBHFeatureVectorNormalizationTime = System.nanoTime();
+			DBHFeatureVectorNormalizationTimeTotalProcessing = stopDBHFeatureVectorNormalizationTime - startDBHFeatureVectorNormalizationTime;
+		}
+		
+		//**************************End of Normalization**********************************
+		
 		
 		String allVectorsString = "";
 		if(saveFeatureVectorsToFile)
@@ -1127,7 +1147,7 @@ public class Traclus {
 			e.printStackTrace();
 		}
 		long stopDBHFeatureVectorClusteringTime = System.nanoTime();
-		double DBHFeatureVectorClusteringTotalProcessing = (stopDBHFeatureVectorClusteringTime - startDBHFeatureVectorClusteringTime + DBHFeatureVectorGenerationTimeTotalProcessing+ hashTotalTime)/1000000000.0;
+		double DBHFeatureVectorClusteringTotalProcessing = (stopDBHFeatureVectorClusteringTime - startDBHFeatureVectorClusteringTime + DBHFeatureVectorGenerationTimeTotalProcessing + DBHFeatureVectorNormalizationTimeTotalProcessing + hashTotalTime)/1000000000.0;
 		System.out.println("Total DBH Feature Vector Clustering Execution time in seconds: " + (DBHFeatureVectorClusteringTotalProcessing));
 		testTrajectoryClustering.timesClustering.add(DBHFeatureVectorClusteringTotalProcessing);
 		return kmeansClusters;
