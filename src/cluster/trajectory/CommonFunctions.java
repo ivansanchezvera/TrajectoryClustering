@@ -20,6 +20,23 @@ public final class CommonFunctions {
 	    return filesInFolder;
 	}
 	
+	/**
+	 * This method returns a String list of the folders directly underneath the given folder path
+	 * @param folderPath
+	 * @return
+	 */
+	public static ArrayList<String> listSubFoldersForFolder(String folderPath) 
+	{
+		ArrayList<String> directSubfoldersInFolder = new ArrayList<String>();
+		final File folder = new File(folderPath);
+	    for (final File fileEntry : folder.listFiles()) {
+	        if (fileEntry.isDirectory()) {
+	        	directSubfoldersInFolder.add(fileEntry.getAbsolutePath());
+	        } 
+	    }
+	    return directSubfoldersInFolder;
+	}
+	
 	public static HashSet<Integer> getHashSetAllTrajectories(ArrayList<Trajectory> testTrajectories) 
 	{
 		// TODO Auto-generated method stub

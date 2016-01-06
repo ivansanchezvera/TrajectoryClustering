@@ -34,7 +34,7 @@ public class DBA {
 	/**
 	 * This attribute is used in order to initialize only once the matrixes
 	 */
-	private final static int MAX_SEQ_LENGTH = 2000;
+	private final static int MAX_SEQ_LENGTH = 5000;
 
 	/**
 	 * store the cost of the alignment

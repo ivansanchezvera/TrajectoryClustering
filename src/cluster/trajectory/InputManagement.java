@@ -1,6 +1,7 @@
 package cluster.trajectory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,6 +13,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import dataset.AusSignLabels;
+import extras.AuxiliaryFunctions;
 import extras.GetPropertyValues;
 
 public class InputManagement {
@@ -606,6 +609,113 @@ public class InputManagement {
 	//testTrajectories.add(tr0);
 	//idTrajectory++;
 	return testTrajectories;
+	}
+	
+	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetAusSign()
+	{
+		//String filePathToDataset = "C:\\Users\\ivan\\Documents\\Unimelb\\Big Project\\My work\\Datasets\\CVRR_dataset_trajectory_clustering";
+		
+		
+		float MDLPrecision = (float) 0.00001;
+		//Set of trajectories to return
+		ArrayList<Trajectory> testTrajectories = new ArrayList<Trajectory>();
+		
+		
+
+		//String tempUserFolder = dataset;
+		//String fileToUserFolder = filePathToDataset + "\\" + tempUserFolder;
+				
+		String fileToUserFolder;
+		try {
+			fileToUserFolder = GetPropertyValues.getPropValues("AUS_SIGN_Dataset");
+			ArrayList<String> userTrajectoryFolders = CommonFunctions.listSubFoldersForFolder(fileToUserFolder);
+			
+			//ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(fileToUserFolder);
+			
+			//Just to give different trajectories different trajectory Id
+			int idTrajectory = 0;
+			
+			//For each User Folder
+			for(String userFolder: userTrajectoryFolders)
+			{
+				ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(userFolder);
+				
+				//For each File in a User Folder
+				for(String filename:UserTrajectoryFiles)
+				{
+
+					//Set of points to make trajectory
+					ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
+					
+					BufferedReader reader;
+					try 
+					{
+						reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+						
+						//Reading Lines and creating trajectories
+						String line;
+												
+						while ((line = reader.readLine()) != null) 
+						{
+						    // process the line.
+							String[] trajectoryPointData = line.split(",");
+							//System.out.println("Trajectory decomposed Line: " + trajectoryPointData);
+							
+							String x_coordinate = trajectoryPointData[0];
+							String y_coordinate = trajectoryPointData[1];
+						
+							float x = Float.parseFloat(x_coordinate);
+							float y = Float.parseFloat(y_coordinate);
+						
+							Point tr0p1 = new Point(x, y , null);
+							
+							listPointsTrajectory0.add(tr0p1);
+						}	
+						
+						Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
+						tr0.setMDLPrecision((float) 0.00001);
+						
+						//To Label
+						//Lets create a var for the label, to handle the output of simplified traj. 
+						int label = -1;
+						String justFileName = new File(filename).getName();
+						String labelName = justFileName.substring(0, justFileName.length()-6);
+						
+						if(labelName.contains("wait")) labelName = "WAIT";
+						if(labelName.contains("problem")) labelName = "NOTMYPROBLEM";
+						if(labelName.contains("is(true)")) labelName = "IS";
+						if(labelName.contains("flash-light")) labelName = "FLASHLIGHT";
+						if(labelName.contains("computer")) labelName = "COMPUTER";
+						if(labelName.contains("change")) labelName = "CHANGE";
+						if(labelName.contains("cal-full-forward")) labelName = "CALFULLFW";
+						if(labelName.contains("cal-full-right")) labelName = "CALFULLRIGHT";
+						if(labelName.contains("cal-full-up")) labelName = "CALFULLUP";
+						
+						labelName = labelName.toUpperCase();
+						label = AusSignLabels.valueOf(labelName).getValue(); 
+						tr0.setClusterIdPreLabel(label);
+						
+						testTrajectories.add(tr0);
+						idTrajectory++;
+						
+					}catch (FileNotFoundException e) {
+						System.err.println("File does not exist: " + filename);
+						//e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+					//Now is time to label this bitches
+					//Filename
+	
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}	
+	return testTrajectories;
+		
 	}
 	
 	public InputManagement() {

@@ -1,7 +1,6 @@
 package cluster.trajectory;
 import graphics.TrajectoryPlotter;
 
-import java.awt.color.CMMException;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.security.AlgorithmConstraints;
@@ -15,7 +14,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import javax.lang.model.type.IntersectionType;
 
 import dataset.TrajectoryDatasets;
 import extras.AuxiliaryFunctions;
@@ -48,17 +46,17 @@ public class testTrajectoryClustering {
 		//starkeyElk93Experiment(method);
 		boolean plotTrajectories = false;
 		boolean simplifyTrajectories = false;
-		boolean printDetailedClusters = false;
+		boolean printDetailedClusters = true;
 		boolean printOutputZayFile = false;
 		boolean printOutputZayToScreen = false;
 		boolean printConfusionMatrix = false;
 		boolean printIntraClusterDistanceMatrix = false;
 		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = false;
 		boolean saveFeatureVectorsToFile = true;
-		boolean calculateSilhouetteCoefficient = false;
+		boolean calculateSilhouetteCoefficient = true;
 		
 		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
-		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.CROSS;
+		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.AUSSIGN;
 		int numberOfPartitionsPerTrajectory = 7; //normal value = 8 //9 for tests with zay
 		
 		//For big data Experiment
@@ -70,12 +68,18 @@ public class testTrajectoryClustering {
 		
 		if(runMultipleExperiments)
 		{
+			
 			for(int i = 0; i<numberOfExperiments; i++)
 			{	
+				System.out.println("");
+				System.out.println("Start of iteration: " + i);
 				CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, 
 						simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
 						numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
 						printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+				System.out.println("End of iteration: " + i);
+				System.out.println("");
+				System.out.println("");
 			}
 			
 			System.out.println("NMI Scores: " + testTrajectoryClustering.NMIValues);
@@ -236,12 +240,11 @@ public class testTrajectoryClustering {
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
-		ArrayList<Trajectory> originalCompleteTrajectories = getTrajectories(false, -1, dataset);
+		ArrayList<Trajectory> originalCompleteTrajectories = getTrajectories(false, -1, dataset, trajectoryDataset);
 		
 		//Before clustering, lets simplify trajectories if we have to.
 		//This have to be done here rather than in the clustering class to have a fair comparison.
-		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories,
-				fixNumberPartitionSegment, dataset);
+		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset);
 		
 		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
 		if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories){
@@ -410,22 +413,33 @@ public class testTrajectoryClustering {
 		
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_BINARY)
 		{
-		//TODO Implement the filtering for minNumElems
-		int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
-		int numBits = 1; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
-		int k = 2; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
-		boolean isBinaryFeatureVector = true; //Cause we want a FV of 0's and 1's
-		
-		traclus = new Traclus(workingTrajectories);
-		//I need to establish better parameters
-		testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+			//TODO Implement the filtering for minNumElems
+			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
+			int numBits = 1; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+			int k = 2; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			boolean isBinaryFeatureVector = true; //Cause we want a FV of 0's and 1's
+			
+			traclus = new Traclus(workingTrajectories);
+			//I need to establish better parameters
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
 		}
 		
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS)
 		{
 			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
 			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
-			int k = 19; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			int k = 97; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
+			
+			traclus = new Traclus(workingTrajectories);
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+		}
+		
+		if(method == ClusteringMethod.KMEDOIDS_DTW)
+		{
+			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
+			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+			int k = 98; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
@@ -517,6 +531,18 @@ public class testTrajectoryClustering {
 			//For LSH EUCLIDEAN
 			testClusters = traclus.executeLSHEuclideanSlidingWindow(numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k, calculateSilhouetteCoefficient);
 			
+		}
+		
+		//For KMeans using LCSS
+		if(method == ClusteringMethod.KMEANS_LCSS)
+		{
+			//Parameters for Kmeans LCSS
+			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
+			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+			int k = 19; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			
+			traclus = new Traclus(workingTrajectories);
+			testClusters = traclus.executeKmeansOverLCSS(numBits, minNumElems, k);	
 		}
 		
 		
@@ -1029,7 +1055,7 @@ public class testTrajectoryClustering {
 		
 		SegmentationMethod segmentationMethod = (simplificationMethod==null? SegmentationMethod.douglasPeucker : simplificationMethod);
 		String dataset = getDatasetVariable(trajectoryDataset);
-		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset);
+		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset);
 
 		do{
 		previousNumOfNonZeroClusters = numOfNonZeroClusters;
@@ -1099,24 +1125,37 @@ public class testTrajectoryClustering {
 	 * @param simplifyTrajectories : Determine if trajectories are simplified
 	 * @param fixNumberPartitionSegment : Determines the number of partitions on each of the return trajectories
 	 * @param dataset : The dataset to work on
+	 * @param trajectoryDataset 
 	 * @return ArrayList of Trajectories.
 	 */
 	private static ArrayList<Trajectory> getTrajectories(boolean simplifyTrajectories,
-			int fixNumberPartitionSegment, String dataset) {
+			int fixNumberPartitionSegment, String dataset, TrajectoryDatasets trajectoryDataset) {
 		
 		ArrayList<Trajectory> workingTrajectories;
-		if(simplifyTrajectories)
-		{
-			String path = System.getProperty("user.dir") + "\\Simplified points\\";
-			
-			//For printing Original Trajectories
-			representedOriginalTraj = OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
-			String exported = "CVRR_Dataset_Exported";
-			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
-			
-			
-		}else{
+		
+		switch (trajectoryDataset) {
+		case AUSSIGN:
+			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetAusSign();
+			break;
+		case CROSS:
+		case LABOMNI:
+			if(simplifyTrajectories)
+			{
+				String path = System.getProperty("user.dir") + "\\Simplified points\\";
+				
+				//For printing Original Trajectories
+				representedOriginalTraj = OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
+				String exported = "CVRR_Dataset_Exported";
+				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
+				
+				
+			}else{
+				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
+			}
+			break;
+		default:
 			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
+			break;
 		}
 		return workingTrajectories;
 	}
@@ -1166,15 +1205,29 @@ public class testTrajectoryClustering {
 	private static String getDatasetVariable(TrajectoryDatasets trajectoryDataset) 
 	{
 		String dataset = "";
-		if(trajectoryDataset == TrajectoryDatasets.LABOMNI)
-		{
+		
+		switch (trajectoryDataset) {
+		case LABOMNI:
 			dataset = "CVRR_Dataset_Labomni_Path";
+			break;
+		case CROSS:
+			dataset = "CVRR_Dataset_Cross_Path";
+			break;
+		case ELK:
+			//TODO Correct this, cause this is not the path.
+			dataset = "GEOLIFE_Dataset";
+			break;
+		case AUSSIGN:
+			dataset = "AUS_SIGN_Dataset";
+			break;
+		case GEOLIFE:
+			dataset = "GEOLIFE_Dataset";
+			break;
+		default:
+			dataset = "CVRR_Dataset_Labomni_Path";
+			break;
 		}
 		
-		if(trajectoryDataset == TrajectoryDatasets.CROSS)
-		{
-			dataset = "CVRR_Dataset_Cross_Path";
-		}
 		return dataset;
 	}
 	

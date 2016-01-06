@@ -71,7 +71,7 @@ public class ClusterQualityMeterer {
 	//Sigan sigan sigan bailando, sigan sigan, con don Medardo...
 	
 	/**
-	 * This method calculates the Silhoutte Coefficient over the DTW distance.
+	 * This method calculates the Silhouette Coefficient over the DTW distance.
 	 * @param setOfClusters : Cluster of Trajectories in the Trajectory Representation
 	 * @return
 	 * @throws Exception

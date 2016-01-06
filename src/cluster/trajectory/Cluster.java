@@ -169,13 +169,18 @@ public class Cluster {
 	//I need the data in trajectory way to compute DBA DTW a
 	public Trajectory[] getElementsAsTrajectoryObjectsArray()
 	{
-		Trajectory[] trajectories = new Trajectory[elements.size()];
-		
-		for(int i = 0; i<elements.size();i++)
-		{
-			trajectories[i] = (Trajectory) elements.get(i);
+		Trajectory[] trajectories = null;
+		try{
+			
+			trajectories = new Trajectory[elements.size()];
+			
+			for(int i = 0; i<elements.size();i++)
+			{
+				trajectories[i] = (Trajectory) elements.get(i);
+			}
+		}catch(Exception ex){
+			System.err.println("Index overflow: " + ex.getMessage());
 		}
-		
 		return trajectories;
 	}
 

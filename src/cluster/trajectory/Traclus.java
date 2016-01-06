@@ -312,6 +312,29 @@ public class Traclus {
 
 	}
 
+	public ArrayList<Cluster> executeKmeansOverLCSS(int numBits, int minNumElems, int k)
+	{
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		try {
+
+			//clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, numHashingFunctions, windowSize, minNumElems);
+
+		} catch (Exception e) {
+			System.err.print(e.getMessage());
+			e.printStackTrace();
+		}
+		
+		long stopTime = System.nanoTime();
+		double finalTimeInSeconds = (stopTime - startTime - TimeKeeping.wastedTime)/1000000000.0;
+		System.out.println("Non clustering time: " + TimeKeeping.wastedTime/1000000000.0);
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
+		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
+		return clusterOfTrajectories;
+	}
 
 	//3 clear stages
 	//Partition Phase
@@ -1351,6 +1374,7 @@ public class Traclus {
 			kmeansClusters = Kmeans.executeVectorKmeans(simplifiedTrajectories, simplifiedTrajectories, k, calculateSilhouetteCoefficient);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
+			System.err.println("Try Simplifying trajectories so clusterables are of same length.");
 			e.printStackTrace();
 		}
 		return kmeansClusters;
@@ -1565,8 +1589,6 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
-
-
 
 	//Calculate Representative Trajectories.
 	//This step is done in each individual cluster, so it is in the cluster class.

@@ -596,7 +596,14 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		TimeSeries ts1 = new TimeSeries(t);
 		TimeSeries ts2 = new TimeSeries(t2);
 		
-		double dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, distFn);
+		double dtwEuclideanCost = 0;
+		try
+		{
+			dtwEuclideanCost = DTW.getWarpDistBetween(ts1, ts2, distFn);
+		}catch(Exception ex)
+		{
+			System.out.println(ex.getMessage());
+		}
 		return dtwEuclideanCost;
 	}
 	
