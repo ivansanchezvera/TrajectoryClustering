@@ -221,7 +221,8 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) {
+	public ArrayList<Cluster> executeDBHOverFeatureVectorTrajectories(int numBits, int minNumElems, int k, boolean isBinaryFeatureVector, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient,
+			boolean normalize) {
 		
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -229,7 +230,7 @@ public class Traclus {
 		
 		//As suggested by Zay, lets try to do K means over the Feature vectors generated from dbh
 		try {
-			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+			clusterOfTrajectories = approximateClustersDBHFeatureVector(workingTrajectories, numBits, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient, normalize);
 		} catch (Exception e) {
 			System.err.print(e.getMessage());
 			e.printStackTrace();
@@ -1061,7 +1062,7 @@ public class Traclus {
 	 * @throws Exception : When Normalization Fails
 	 */
 	private ArrayList<Cluster> approximateClustersDBHFeatureVector(ArrayList<Trajectory> workingTrajectories, int numBits, int k, 
-			boolean binary, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) throws Exception 
+			boolean binary, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient, boolean normalize) throws Exception 
 	{
 		long startHashFunctionTime = System.nanoTime();
 		
@@ -1124,7 +1125,7 @@ public class Traclus {
 		//*******************************Normalization**********************************
 		//Normalize only for real values
 		double DBHFeatureVectorNormalizationTimeTotalProcessing = 0;
-		if(!binary)
+		if(!binary && normalize)
 		{
 			long startDBHFeatureVectorNormalizationTime = System.nanoTime();
 			//Create reference feature vectors for normalization

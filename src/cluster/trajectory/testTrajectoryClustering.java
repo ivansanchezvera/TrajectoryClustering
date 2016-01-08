@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.jfree.date.EasterSundayRule;
 
 import dataset.TrajectoryDatasets;
 import extras.AuxiliaryFunctions;
@@ -40,81 +41,89 @@ public class testTrajectoryClustering {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		
-		ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
-		//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
-		//starkeyElk93Experiment(method);
-		boolean plotTrajectories = false;
-		boolean simplifyTrajectories = false;
-		boolean printDetailedClusters = true;
-		boolean printOutputZayFile = false;
-		boolean printOutputZayToScreen = false;
-		boolean printConfusionMatrix = false;
-		boolean printIntraClusterDistanceMatrix = false;
-		boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = false;
-		boolean saveFeatureVectorsToFile = true;
-		boolean calculateSilhouetteCoefficient = true;
-		
-		SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
-		TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.AUSSIGN;
-		int numberOfPartitionsPerTrajectory = 7; //normal value = 8 //9 for tests with zay
-		
-		//For big data Experiment
-		boolean veryBigData = false;
-		int numTrajectoryBigDataset = 500;
-		
-		boolean runMultipleExperiments = true;
-		int numberOfExperiments = 5;
-		
-		if(runMultipleExperiments)
-		{
+		try {
 			
-			for(int i = 0; i<numberOfExperiments; i++)
-			{	
-				System.out.println("");
-				System.out.println("Start of iteration: " + i);
+			ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
+			//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
+			//starkeyElk93Experiment(method);
+			boolean plotTrajectories = false;
+			boolean simplifyTrajectories = true;
+			boolean printDetailedClusters = true;
+			boolean printOutputZayFile = false;
+			boolean printOutputZayToScreen = false;
+			boolean printConfusionMatrix = false;
+			boolean printIntraClusterDistanceMatrix = false;
+			boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters = false;
+			boolean saveFeatureVectorsToFile = true;
+			boolean calculateSilhouetteCoefficient = false;
+			boolean normalize = false;
+			
+			SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
+			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.AUSSIGN;
+			int numberOfPartitionsPerTrajectory = 7; //normal value = 8 //9 for tests with zay
+			
+			//For big data Experiment
+			boolean veryBigData = false;
+			int numTrajectoryBigDataset = 500;
+			
+			boolean runMultipleExperiments = true;
+			int numberOfExperiments = 5;
+			
+			if(runMultipleExperiments)
+			{
+				
+				for(int i = 0; i<numberOfExperiments; i++)
+				{	
+					System.out.println("");
+					System.out.println("Start of iteration: " + i);
+					CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, 
+							simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
+							numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
+							printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient,
+							normalize);
+					System.out.println("End of iteration: " + i);
+					System.out.println("");
+					System.out.println("");
+				}
+				
+				System.out.println("NMI Scores: " + testTrajectoryClustering.NMIValues);
+				if(calculateSilhouetteCoefficient)
+				{
+					System.out.println("Silhouette Scores: " + testTrajectoryClustering.silhouetteValues);
+				}else{
+					System.out.println("Silhouette calculation deactivativated");
+				}
+				if(simplifyTrajectories)
+				{
+					System.out.println("Douglas Peucker Times: " + testTrajectoryClustering.timesDouglasPeucker);
+				}else{
+					System.out.println("Trajectory Simplification deactivativated");
+				}
+				System.out.println("Clustering Times: " + testTrajectoryClustering.timesClustering);
+			}else{
 				CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, 
-						simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
-						numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
-						printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
-				System.out.println("End of iteration: " + i);
-				System.out.println("");
-				System.out.println("");
+							simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
+							numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
+							printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient,
+							normalize);
 			}
+			//to evaluate the numbers of buckets produced by different numbers of hashing functions
+			/*
+			boolean plotHashFuntionsToNumBucketsGraph = true;
+			int maxIterations = 20;
+			int startingNumHashFunctions = 1;
 			
-			System.out.println("NMI Scores: " + testTrajectoryClustering.NMIValues);
-			if(calculateSilhouetteCoefficient)
-			{
-				System.out.println("Silhouette Scores: " + testTrajectoryClustering.silhouetteValues);
-			}else{
-				System.out.println("Silhouette calculation deactivativated");
-			}
-			if(simplifyTrajectories)
-			{
-				System.out.println("Douglas Peucker Times: " + testTrajectoryClustering.timesDouglasPeucker);
-			}else{
-				System.out.println("Trajectory Simplification deactivativated");
-			}
-			System.out.println("Clustering Times: " + testTrajectoryClustering.timesClustering);
-		}else{
-			CVRRExperiment(method, trajectoryDataset, plotTrajectories, plotCompleteTrajectoriesEquivalentForSimplifiedClusters, 
-					simplifyTrajectories, simplificationMethod,numberOfPartitionsPerTrajectory, veryBigData, 
-					numTrajectoryBigDataset, printOutputZayFile, printOutputZayToScreen, printConfusionMatrix, 
-					printDetailedClusters, printIntraClusterDistanceMatrix, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+			int totalHashesReached;
+			int maxTotalOfHashesToReach = 6;
+			do{
+			totalHashesReached = evaluateProduceNumOfClusters(method, trajectoryDataset, plotHashFuntionsToNumBucketsGraph, simplifyTrajectories, simplificationMethod, 
+					numberOfPartitionsPerTrajectory, maxIterations, startingNumHashFunctions);
+			}while(totalHashesReached<maxTotalOfHashesToReach);
+			*/
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		//to evaluate the numbers of buckets produced by different numbers of hashing functions
-		/*
-		boolean plotHashFuntionsToNumBucketsGraph = true;
-		int maxIterations = 20;
-		int startingNumHashFunctions = 1;
-		
-		int totalHashesReached;
-		int maxTotalOfHashesToReach = 6;
-		do{
-		totalHashesReached = evaluateProduceNumOfClusters(method, trajectoryDataset, plotHashFuntionsToNumBucketsGraph, simplifyTrajectories, simplificationMethod, 
-				numberOfPartitionsPerTrajectory, maxIterations, startingNumHashFunctions);
-		}while(totalHashesReached<maxTotalOfHashesToReach);
-		*/
 	}
 
 	/**
@@ -218,7 +227,8 @@ public class testTrajectoryClustering {
 			boolean plotTrajectories, boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters, boolean simplifyTrajectories, 
 			SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, 
 			boolean printOutputZayToFile, boolean printOutputZayToScreen, boolean printConfusionMatrix, boolean printDetailedClusters, 
-			boolean printIntraClusterDistanceMatrix, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient) {
+			boolean printIntraClusterDistanceMatrix, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient, 
+			boolean normalize) throws Exception {
 
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
@@ -240,15 +250,37 @@ public class testTrajectoryClustering {
 		
 		ArrayList<Cluster> testClusters = new ArrayList<Cluster>();
 		
-		ArrayList<Trajectory> originalCompleteTrajectories = getTrajectories(false, -1, dataset, trajectoryDataset);
+		ArrayList<Trajectory> originalCompleteTrajectories = getTrajectories(false, -1, dataset, trajectoryDataset, null);
 		
 		//Before clustering, lets simplify trajectories if we have to.
 		//This have to be done here rather than in the clustering class to have a fair comparison.
-		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset);
+		ArrayList<Trajectory> workingTrajectories = new ArrayList<Trajectory>();
+		
+		switch (trajectoryDataset) {
+		case AUSSIGN:
+			workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset, originalCompleteTrajectories);
+			break;
+		case CROSS:
+		case LABOMNI:
+			workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset, null);
+			break;
+		default:
+			break;
+		}
 		
 		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
 		if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories){
-			originalCompleteTrajectories = adjustCompleteTrajectoriesToSimplifiedIndex(workingTrajectories, originalCompleteTrajectories, representedOriginalTraj);
+			switch (trajectoryDataset) {
+			case AUSSIGN:
+				originalCompleteTrajectories = filterAusSignDataset(workingTrajectories, originalCompleteTrajectories);
+				break;
+			case CROSS:
+			case LABOMNI:
+				originalCompleteTrajectories = adjustCompleteTrajectoriesToSimplifiedIndex(workingTrajectories, originalCompleteTrajectories, representedOriginalTraj);
+			default:
+				break;
+			}
+			
 		}
 		
 		if(veryBigData)
@@ -421,7 +453,7 @@ public class testTrajectoryClustering {
 			
 			traclus = new Traclus(workingTrajectories);
 			//I need to establish better parameters
-			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient, normalize);
 		}
 		
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS)
@@ -432,43 +464,17 @@ public class testTrajectoryClustering {
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
-			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
+			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient, normalize);
 		}
 		
+		//KMedoids
 		if(method == ClusteringMethod.KMEDOIDS_DTW)
 		{
 			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
-			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
 			int k = 98; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
-			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
-			
+
 			traclus = new Traclus(workingTrajectories);
-			testClusters = traclus.executeDBHOverFeatureVectorTrajectories(numBits, minNumElems, k, isBinaryFeatureVector, saveFeatureVectorsToFile, calculateSilhouetteCoefficient);
-		}
-		
-		
-		//For K-Medoids
-		if(method == ClusteringMethod.KMEDOIDS_DTW)
-		{
-		//Call KMedoids here
-			
-			//For Trajectory Partition using Douglas-Peucker
-			segmentationMethod = SegmentationMethod.douglasPeucker;
-			
-			//Parameters for Partition
-			double epsilonDouglasPeucker = 0.001;
-			fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-			simplifyTrajectories = true; //Normally set to true
-			int minNumElems = 1;
-			
-			//Parameters for K-Medoids
-			int k = 19;
-			
-			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-			
-			//For Kmeans for Whole trajectories
 			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k, minNumElems);
-			
 		}
 		
 		//For K-MeansDTW
@@ -613,6 +619,19 @@ public class testTrajectoryClustering {
 		if(printIntraClusterDistanceMatrix)	printIntraClusterDistanceMatrix(method, testClusters);
 		//System.out.println("Inverted Output");
 		//compareClusters(testClusters, realClusters, allTrajectories);
+	}
+
+	private static ArrayList<Trajectory> filterAusSignDataset(ArrayList<Trajectory> workingTrajectories,
+			ArrayList<Trajectory> originalCompleteTrajectories) {
+		// TODO Auto-generated method stub
+		ArrayList<Trajectory> originalTrajectoriesFiltered = new ArrayList<Trajectory>();
+		ArrayList<Integer> trajectoryIdsToKeep = new ArrayList<Integer>();
+		for(Trajectory t: workingTrajectories)
+		{
+			trajectoryIdsToKeep.add(t.getTrajectoryId());
+		}
+		originalCompleteTrajectories = Trajectory.filterTrajectoryListById(originalCompleteTrajectories, trajectoryIdsToKeep);
+		return originalTrajectoriesFiltered;
 	}
 
 	/**
@@ -1041,9 +1060,10 @@ public class testTrajectoryClustering {
 	 * @param simplifyTrajectories
 	 * @param simplificationMethod
 	 * @param fixNumberPartitionSegment
+	 * @throws Exception 
 	 */
 	public static int evaluateProduceNumOfClusters(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
-			boolean plotGraph, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, int maxIterations, int startingNumHashFunctions)
+			boolean plotGraph, boolean simplifyTrajectories, SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, int maxIterations, int startingNumHashFunctions) throws Exception
 	{	
 		int numOfNonZeroClusters = -1;
 		int previousNumOfNonZeroClusters = -2;
@@ -1055,7 +1075,7 @@ public class testTrajectoryClustering {
 		
 		SegmentationMethod segmentationMethod = (simplificationMethod==null? SegmentationMethod.douglasPeucker : simplificationMethod);
 		String dataset = getDatasetVariable(trajectoryDataset);
-		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset);
+		ArrayList<Trajectory> workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset, null);
 
 		do{
 		previousNumOfNonZeroClusters = numOfNonZeroClusters;
@@ -1126,16 +1146,29 @@ public class testTrajectoryClustering {
 	 * @param fixNumberPartitionSegment : Determines the number of partitions on each of the return trajectories
 	 * @param dataset : The dataset to work on
 	 * @param trajectoryDataset 
+	 * @param originalCompleteTrajectories 
 	 * @return ArrayList of Trajectories.
+	 * @throws Exception : Exception throw when original trajectory data parameter missing to calculate simplified trajectories of AUSSign language dataset
 	 */
 	private static ArrayList<Trajectory> getTrajectories(boolean simplifyTrajectories,
-			int fixNumberPartitionSegment, String dataset, TrajectoryDatasets trajectoryDataset) {
+			int fixNumberPartitionSegment, String dataset, TrajectoryDatasets trajectoryDataset, ArrayList<Trajectory> originalCompleteTrajectories) throws Exception {
 		
 		ArrayList<Trajectory> workingTrajectories;
 		
 		switch (trajectoryDataset) {
 		case AUSSIGN:
-			workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetAusSign();
+			if(simplifyTrajectories)
+			{
+				if(originalCompleteTrajectories!=null)
+				{
+					workingTrajectories = InputManagement.simplifyTrajectoriesFromDatasetAusSign(fixNumberPartitionSegment, originalCompleteTrajectories);
+				}else{
+					System.err.println("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
+					throw new Exception("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
+				}
+			}else{
+				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetAusSign();
+			}
 			break;
 		case CROSS:
 		case LABOMNI:
@@ -1147,8 +1180,6 @@ public class testTrajectoryClustering {
 				representedOriginalTraj = OutputManagement.ExportReducedTrajectories(path, dataset, fixNumberPartitionSegment);
 				String exported = "CVRR_Dataset_Exported";
 				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
-				
-				
 			}else{
 				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
 			}

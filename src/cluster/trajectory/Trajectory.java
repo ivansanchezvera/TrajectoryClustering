@@ -939,4 +939,24 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 	public void setClusterIdPreLabel(int clusterIdPreLabel) {
 		this.clusterIdPreLabel = clusterIdPreLabel;
 	}
+
+	/**
+	 * Keeps the trajectories in a list that contain a given set of ids in a list.
+	 * @param trajectories
+	 * @param trajectoryIdsToKeep
+	 * @return
+	 */
+	public static ArrayList<Trajectory> filterTrajectoryListById(ArrayList<Trajectory> trajectories,
+			ArrayList<Integer> trajectoryIdsToKeep) 
+	{
+		ArrayList<Trajectory> filteredTrajectories = new ArrayList<Trajectory>();
+		for(Trajectory t: trajectories)
+		{
+			if(trajectoryIdsToKeep.contains(t.getTrajectoryId()))
+			{
+				filteredTrajectories.add(t);
+			}
+		}
+		return filteredTrajectories;
+	}
 }

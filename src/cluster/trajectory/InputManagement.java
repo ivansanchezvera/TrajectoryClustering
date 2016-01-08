@@ -722,4 +722,17 @@ public class InputManagement {
 		// TODO Auto-generated constructor stub
 	}
 
+
+	public static ArrayList<Trajectory> simplifyTrajectoriesFromDatasetAusSign(int fixNumberPartitionSegment, ArrayList<Trajectory> originalCompleteTrajectories) 
+	{
+		ArrayList<Trajectory> simplifiedTrajectories = new ArrayList<Trajectory>();
+		for(Trajectory t: originalCompleteTrajectories)
+		{
+			//TODO correct this, epsilon parameter 0.001 is useless, refactor this method in the whole project
+			Trajectory tempSimplifiedTrajectory = t.simplifyTrajectoryDouglasPeucker(0.001, fixNumberPartitionSegment);
+			simplifiedTrajectories.add(tempSimplifiedTrajectory);
+		}
+		return simplifiedTrajectories;
+	}
+
 }
