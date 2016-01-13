@@ -114,7 +114,7 @@ public class TrajectoryClustering {
 		//exportPlotableCoordinatesForAllTrajectories(simplifiedTrajectories);
 		
 		//Now we are trying to obtain centroids based in DTW metric and not in Euclideand Distance like K-Means
-		clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k);		
+		clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k, TrajectoryDistance.DTW);		
 		
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
@@ -1077,17 +1077,17 @@ public class TrajectoryClustering {
 	 * This method uses DTW distance to calculate new point that will be assumed as the center of the cluster
 	 * similar to kmeans but we do not need to calculate a centroid, instead we choose points (trajectories) as
 	 * the new center of the cluster until it converges 
-	 * @param simplifiedTrajectories
+	 * @param trajectories
 	 * @param k
 	 * @return
 	 */
 	private ArrayList<Cluster> clusterTrajectoriesKMedoids(
-			ArrayList<Trajectory> simplifiedTrajectories, int k) {
+			ArrayList<Trajectory> trajectories, int k, TrajectoryDistance trajectoryDistance) {
 
 		ArrayList<Cluster> kmedoidsClusters = new ArrayList<Cluster>();
 		
 		//here call kmedoids
-		kmedoidsClusters = Kmedoids.execute(simplifiedTrajectories, k);
+		kmedoidsClusters = Kmedoids.execute(trajectories, k, trajectoryDistance);
 		
 		return kmedoidsClusters;
 	}

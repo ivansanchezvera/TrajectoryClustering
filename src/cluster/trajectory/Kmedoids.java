@@ -14,7 +14,7 @@ public class Kmedoids {
 		// TODO Auto-generated constructor stub
 	}
 
-	public static ArrayList<Cluster> execute(List<Trajectory> trajectoryList, int k)
+	public static ArrayList<Cluster> execute(List<Trajectory> trajectoryList, int k, TrajectoryDistance trajectoryDistance)
 	{
 		ArrayList<Cluster> kmenoidsClusters = new ArrayList<Cluster>();
 		
@@ -79,18 +79,18 @@ public class Kmedoids {
 			for(Trajectory t:trajectoryList)
 			{
 				//Get DTW distance from center points
-				double minDTWDistance = Double.POSITIVE_INFINITY;
+				double minDistance = Double.POSITIVE_INFINITY;
 				int clusterIndex = -1; //Verify that this does not fail
 				for(Cluster c:newClusters)
 				{
 					//Refactor this to be more elegant
 					//if(t.getTrajectoryId()!=c.getCentroidElement().getTrajectoryId())
 					{
-						double distance = Trajectory.calculateDTWDistance(t, (Trajectory) c.getCentroidElement());
+						double distance = Trajectory.calculateDistance(t, (Trajectory) c.getCentroidElement(), trajectoryDistance);								
 						
-						if(distance<minDTWDistance)
+						if(distance<minDistance)
 						{
-							minDTWDistance = distance;
+							minDistance = distance;
 							clusterIndex = newClusters.indexOf(c);
 						}
 					}
@@ -117,7 +117,7 @@ public class Kmedoids {
 					{
 						if(o2!=o)
 						{
-							tempDist = tempDist + Trajectory.calculateDTWDistance((Trajectory)o, (Trajectory)o2);
+							tempDist = tempDist + Trajectory.calculateDistance((Trajectory)o, (Trajectory)o2, trajectoryDistance);			
 						}
 					}
 					

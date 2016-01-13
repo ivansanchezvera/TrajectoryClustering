@@ -1,0 +1,2 @@
+This code is based from:
+https://github.com/PanSours/LcssAlgorithm

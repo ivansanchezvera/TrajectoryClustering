@@ -224,30 +224,31 @@ public class InputManagement {
 	
 	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetMicrosoftGeolife(int userIndex)
 	{
-		String filePathToDataset = "C:\\Users\\Ivan\\Documents\\Unimelb\\Big Project\\My work\\Datasets\\Geolife Trajectories 1.3\\Data";
-		
-		float MDLPrecision = (float) 0.00001;
 		//Set of trajectories to return
 		ArrayList<Trajectory> testTrajectories = new ArrayList<Trajectory>();
-		
-		for(int i = 0; i<=userIndex; i++)
-		{
-			String tempUserFolder = String.format("%03d", i);
-			String fileToUserFolder = filePathToDataset + "\\" + tempUserFolder + "\\Trajectory";
+		try {
+			String filePathToDataset;
+			filePathToDataset = GetPropertyValues.getPropValues("GEOLIFE_Dataset");
 			
-			ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(fileToUserFolder);
+			float MDLPrecision = (float) 0.00001;
 			
-			
-			//Just to give different trajectories different trajectory Id
-			int idTrajectory = 0;
-			
-			for(String userTrajectoryFile: UserTrajectoryFiles)
+			for(int i = 0; i<=userIndex; i++)
 			{
-				//Set of points to make trajectory
-				ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
+				String tempUserFolder = String.format("%03d", i);
+				String fileToUserFolder = filePathToDataset + "\\" + tempUserFolder + "\\Trajectory";
 				
-				BufferedReader reader;
-				try {
+				ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(fileToUserFolder);
+				
+				
+				//Just to give different trajectories different trajectory Id
+				int idTrajectory = 0;
+				
+				for(String userTrajectoryFile: UserTrajectoryFiles)
+				{
+					//Set of points to make trajectory
+					ArrayList<Point> listPointsTrajectory0 = new ArrayList<Point>();
+					
+					BufferedReader reader;
 					reader = new BufferedReader(new InputStreamReader(
 			        new FileInputStream(userTrajectoryFile)));
 						
@@ -296,18 +297,21 @@ public class InputManagement {
 						Point tr0p1 = new Point(longitudeF, latitudeF , new java.sql.Timestamp(d.getTime()));
 						
 						listPointsTrajectory0.add(tr0p1);
-						}		
-					}catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				
-				Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
-				tr0.setMDLPrecision((float) 0.00001);
-				testTrajectories.add(tr0);
-				idTrajectory++;
+					}	
+					Trajectory tr0 = new Trajectory(idTrajectory, listPointsTrajectory0);
+					tr0.setMDLPrecision((float) 0.00001);
+					testTrajectories.add(tr0);
+					idTrajectory++;
+					
+					reader.close();
+				}
 			}
+		}catch (FileNotFoundException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
 		}
 		return testTrajectories;
 	}
@@ -723,8 +727,9 @@ public class InputManagement {
 	}
 
 
-	public static ArrayList<Trajectory> simplifyTrajectoriesFromDatasetAusSign(int fixNumberPartitionSegment, ArrayList<Trajectory> originalCompleteTrajectories) 
+	public static ArrayList<Trajectory> simplifyTrajectoriesFromDataset(int fixNumberPartitionSegment, ArrayList<Trajectory> originalCompleteTrajectories) 
 	{
+		long startDouglasPeuckerTime = System.nanoTime();
 		ArrayList<Trajectory> simplifiedTrajectories = new ArrayList<Trajectory>();
 		for(Trajectory t: originalCompleteTrajectories)
 		{
@@ -732,6 +737,13 @@ public class InputManagement {
 			Trajectory tempSimplifiedTrajectory = t.simplifyTrajectoryDouglasPeucker(0.001, fixNumberPartitionSegment);
 			simplifiedTrajectories.add(tempSimplifiedTrajectory);
 		}
+		
+		//For time
+		long stopDouglasPeuckerTime = System.nanoTime();
+		double douglasPeuckerTimeTotalProcessing = (stopDouglasPeuckerTime - startDouglasPeuckerTime)/1000000000.0;
+		System.out.println("Total DBH Feature Vector Clustering Execution time in seconds: " + (douglasPeuckerTimeTotalProcessing));
+		testTrajectoryClustering.timesDouglasPeucker.add(douglasPeuckerTimeTotalProcessing);
+		
 		return simplifiedTrajectories;
 	}
 

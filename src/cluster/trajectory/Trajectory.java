@@ -24,6 +24,9 @@ import fastdtw.com.dtw.SearchWindow;
 import fastdtw.com.timeseries.TimeSeries;
 import fastdtw.com.util.DistanceFunction;
 import fastdtw.com.util.DistanceFunctionFactory;
+import lcss.LCSS;
+import lcss.structure.FinalResult;
+import lcss.structure.GeographicalSpots;
 
 import com.stromberglabs.cluster.Clusterable;
 
@@ -581,7 +584,7 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		return distanceCostFromTrajectoryToHypoteticalPath;
 	}
 	
-
+	//************************************ Start Of Distance Sections *****************************************
 	/**
 	 * To calculate DTW distance without the warping path, just as a double
 	 * to obtain the neighborhood for density based clustering
@@ -659,6 +662,59 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		return dtwEuclideanCost;
 	}
 
+	/**
+	 * Calculates the longest common subsequence (LCSS) between any 2 given trajectories
+	 * @param t
+	 * @param t2
+	 * @return
+	 */
+	public static double calculateLCSSDistance(Trajectory t, Trajectory t2) 
+	{
+		ArrayList<GeographicalSpots> t1AsGeoSpots = GeographicalSpots.convertTrajectoryToGeographicalSpots(t);
+		ArrayList<GeographicalSpots> t2AsGeoSpots = GeographicalSpots.convertTrajectoryToGeographicalSpots(t2);
+		FinalResult fr = LCSS.lcss(t1AsGeoSpots, t2AsGeoSpots);
+		double lcssDistance = fr.getMaxLcss();
+		// TODO Auto-generated method stub
+		return lcssDistance;
+	}
+	
+	/**
+	 * Refactored Method to calculate any distance between 2 trajectories given the type of distance
+	 * @param t
+	 * @param t2
+	 * @param trajectoryDistance : The type of distance to calculate
+	 * @return calculatedDistance : A double value of the distance between any 2 trajectories according to the distance type
+	 */
+	public static double calculateDistance(Trajectory t, Trajectory t2, TrajectoryDistance trajectoryDistance)
+	{
+		double calculatedDistance = Double.POSITIVE_INFINITY;
+		switch (trajectoryDistance) {
+		case DTW:
+			calculatedDistance = calculateDTWDistance(t, t2);
+			break;
+		case LCSS:
+			calculatedDistance = calculateLCSSDistance(t, t2);
+		case EUCLIDEAN:
+			calculatedDistance = calculateEuclideanDistance(t, t2);
+		default:
+			calculatedDistance = calculateDTWDistance(t, t2);
+			break;
+		}
+		return calculatedDistance;
+	}
+
+	/**
+	 * Calculates Euclidean Distance Sum between any 2 given trajectories.
+	 * @param t
+	 * @param t2
+	 * @return
+	 */
+	private static double calculateEuclideanDistance(Trajectory t, Trajectory t2) {
+		// TODO Implement EDS HERE
+		throw new UnsupportedOperationException("Implementation of EDS pending!");
+	}
+	
+	//************************************ End Of Distance Sections *****************************************
 
 	public int getTrajectoryId() {
 		return id;
@@ -959,4 +1015,6 @@ public class Trajectory extends cluster.trajectory.Clusterable implements Cluste
 		}
 		return filteredTrajectories;
 	}
+
+
 }

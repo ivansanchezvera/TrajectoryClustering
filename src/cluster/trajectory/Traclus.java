@@ -124,7 +124,7 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKMeansClusterOverTrajectories(int k, int minNumElems, boolean calculateSilhouetteCoefficient)
+	public ArrayList<Cluster> executeKMeansDTW(int k, int minNumElems, boolean calculateSilhouetteCoefficient)
 	{
 		//ArrayList<Trajectory> simplifiedTrajectories = simplifyTrajectories(trajectories, true, segmentationMethod, fixedNumOfTrajectoryPartitionsDouglas);
 		
@@ -146,7 +146,7 @@ public class Traclus {
 		return clusterOfTrajectories;
 	}
 	
-	public ArrayList<Cluster> executeKMedoidsClusterOverTrajectories(int k, int minNumElems) {
+	public ArrayList<Cluster> executeKMedoidsDTW(int k, int minNumElems) {
 
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
@@ -156,8 +156,8 @@ public class Traclus {
 		//Export trajectories to visualize them
 		//exportPlotableCoordinatesForAllTrajectories(simplifiedTrajectories);
 		
-		//Now we are trying to obtain centroids based in DTW metric and not in Euclideand Distance like K-Means
-		clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k);		
+		//Now we are trying to obtain centroids based in DTW metric and not in Euclidean Distance like K-Means
+		clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k, TrajectoryDistance.DTW);		
 		
 		long stopTime = System.nanoTime();
 		double finalTimeInSeconds = (stopTime - startTime)/1000000000.0;
@@ -313,14 +313,15 @@ public class Traclus {
 
 	}
 
-	public ArrayList<Cluster> executeKmeansOverLCSS(int numBits, int minNumElems, int k)
+	public ArrayList<Cluster> executeKmeansLCSS(int numBits, int minNumElems, int k)
 	{
 		ArrayList<Trajectory> workingTrajectories = trajectories;
 		
 		long startTime = System.nanoTime();
 		
 		try {
-
+			//TODO Implement Kmeans LCSS
+			throw new UnsupportedOperationException("Still need to implement Kmeans over LCSS");
 			//clusterOfTrajectories = approximateClustersLSHEuclidean(workingTrajectories, numHashingFunctions, windowSize, minNumElems);
 
 		} catch (Exception e) {
@@ -336,6 +337,31 @@ public class Traclus {
 		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
 		return clusterOfTrajectories;
 	}
+	
+	public ArrayList<Cluster> executeKmedoidsLCSS(int minNumElems, int k) 
+	{
+		ArrayList<Trajectory> workingTrajectories = trajectories;
+		
+		long startTime = System.nanoTime();
+		
+		try {
+
+			clusterOfTrajectories = clusterTrajectoriesKMedoids(workingTrajectories, k, TrajectoryDistance.LCSS);
+
+		} catch (Exception e) {
+			System.err.print(e.getMessage());
+			e.printStackTrace();
+		}
+		
+		long stopTime = System.nanoTime();
+		double finalTimeInSeconds = (stopTime - startTime - TimeKeeping.wastedTime)/1000000000.0;
+		System.out.println("Non clustering time: " + TimeKeeping.wastedTime/1000000000.0);
+		System.out.println("Clustering Execution time in seconds: " + (finalTimeInSeconds));
+		testTrajectoryClustering.timesClustering.add(finalTimeInSeconds);
+		clusterOfTrajectories = Cluster.keepClustersWithMinElements(clusterOfTrajectories, minNumElems);
+		return clusterOfTrajectories;
+	}
+
 
 	//3 clear stages
 	//Partition Phase
@@ -1387,15 +1413,16 @@ public class Traclus {
 	 * the new center of the cluster until it converges 
 	 * @param simplifiedTrajectories
 	 * @param k
+	 * @param distance 
 	 * @return
 	 */
 	private ArrayList<Cluster> clusterTrajectoriesKMedoids(
-			ArrayList<Trajectory> simplifiedTrajectories, int k) {
+			ArrayList<Trajectory> simplifiedTrajectories, int k, TrajectoryDistance distance) {
 
 		ArrayList<Cluster> kmedoidsClusters = new ArrayList<Cluster>();
 		
 		//here call kmedoids
-		kmedoidsClusters = Kmedoids.execute(simplifiedTrajectories, k);
+		kmedoidsClusters = Kmedoids.execute(simplifiedTrajectories, k, distance);
 		
 		return kmedoidsClusters;
 	}
@@ -1590,6 +1617,7 @@ public class Traclus {
 			int fixedNumOfTrajectoryPartitionsDouglas) {
 		this.fixedNumOfTrajectoryPartitionsDouglas = fixedNumOfTrajectoryPartitionsDouglas;
 	}
+
 
 	//Calculate Representative Trajectories.
 	//This step is done in each individual cluster, so it is in the cluster class.

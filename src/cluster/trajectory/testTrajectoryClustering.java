@@ -16,6 +16,7 @@ import java.util.HashSet;
 
 import org.jfree.date.EasterSundayRule;
 
+import dataset.DatasetConfig;
 import dataset.TrajectoryDatasets;
 import extras.AuxiliaryFunctions;
 
@@ -43,7 +44,7 @@ public class testTrajectoryClustering {
 	public static void main(String[] args) {
 		try {
 			
-			ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
+			ClusteringMethod method = ClusteringMethod.KMEDOIDS_DTW;
 			//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 			//starkeyElk93Experiment(method);
 			boolean plotTrajectories = false;
@@ -59,8 +60,8 @@ public class testTrajectoryClustering {
 			boolean normalize = false;
 			
 			SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
-			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.AUSSIGN;
-			int numberOfPartitionsPerTrajectory = 7; //normal value = 8 //9 for tests with zay
+			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.GEOLIFE;
+			int numberOfPartitionsPerTrajectory = 25; //normal value = 8 //9 for tests with zay
 			
 			//For big data Experiment
 			boolean veryBigData = false;
@@ -216,7 +217,7 @@ public class testTrajectoryClustering {
 		//ArrayList<Cluster> testClusters = traclus.executeDensityBasedClusterOverTrajectories();
 		
 		//For Kmeans for Whole trajectories
-		ArrayList<Cluster> testClusters = traclus.executeKMeansClusterOverTrajectories(13, minLins, calculateSilhouetteCoefficient);
+		ArrayList<Cluster> testClusters = traclus.executeKMeansDTW(13, minLins, calculateSilhouetteCoefficient);
 		
 		//Here print Real cluster data, we do not have those labels yet here
 
@@ -230,6 +231,9 @@ public class testTrajectoryClustering {
 			boolean printIntraClusterDistanceMatrix, boolean saveFeatureVectorsToFile, boolean calculateSilhouetteCoefficient, 
 			boolean normalize) throws Exception {
 
+		//Make method to get dataset Values (number of clusters, if labeled, etc)
+		DatasetConfig datasetConfig = new DatasetConfig(trajectoryDataset);
+		
 		//Make sure to initilize this for final version
 		Traclus traclus = null;
 		
@@ -287,69 +291,6 @@ public class testTrajectoryClustering {
 		{
 			workingTrajectories = bigDataset(numTrajectoryBigDataset, workingTrajectories); 
 		}
-		
-		//TODO Erase this from actual code, it is just for a temporary experiment
-		//************For Rao Experiment with DBH DTW 2 clusters****************
-		//Lets just make a set of trajectories from the clusters we actually want
-		/*
-		ArrayList<Trajectory> filteredTrajectories = new ArrayList<Trajectory>();
-		//true cluster 3 (seems opposite in the graph to cluster 8)
-		Trajectory filtered0 = workingTrajectories.get(181);
-		filtered0.setTrajectoryId(0);
-		filteredTrajectories.add(filtered0);
-		Trajectory filtered1 = workingTrajectories.get(187);
-		filtered1.setTrajectoryId(1);
-		filteredTrajectories.add(filtered1);
-		Trajectory filtered2 = workingTrajectories.get(188);
-		filtered2.setTrajectoryId(2);
-		filteredTrajectories.add(filtered2);
-		//true cluster 8 (seems opposite in the graph to cluster 3)
-		Trajectory filtered3 = workingTrajectories.get(66);
-		filtered3.setTrajectoryId(3);
-		filteredTrajectories.add(filtered3);
-
-		Trajectory filtered4 = workingTrajectories.get(86);
-		filtered4.setTrajectoryId(4);
-		filteredTrajectories.add(filtered4);
-
-		Trajectory filtered5 = workingTrajectories.get(148);
-		filtered5.setTrajectoryId(5);
-		filteredTrajectories.add(filtered5);
-
-		Trajectory filtered6 = workingTrajectories.get(150);
-		filtered6.setTrajectoryId(6);
-		filteredTrajectories.add(filtered6);
-
-		Trajectory filtered7 = workingTrajectories.get(152);
-		filtered7.setTrajectoryId(7);
-		filteredTrajectories.add(filtered7);
-		
-		Trajectory filtered8 = workingTrajectories.get(154);
-		filtered8.setTrajectoryId(8);
-		filteredTrajectories.add(filtered8);
-
-		Trajectory filtered9 = workingTrajectories.get(156);
-		filtered9.setTrajectoryId(9);
-		filteredTrajectories.add(filtered9);
-
-		Trajectory filtered10 = workingTrajectories.get(174);
-		filtered10.setTrajectoryId(10);
-		filteredTrajectories.add(filtered10);
-
-		Trajectory filtered11 = workingTrajectories.get(175);
-		filtered11.setTrajectoryId(11);
-		filteredTrajectories.add(filtered11);
-
-		Trajectory filtered12 = workingTrajectories.get(190);
-		filtered12.setTrajectoryId(12);
-		filteredTrajectories.add(filtered12);
-
-		Trajectory filtered13 = workingTrajectories.get(192);
-		filtered13.setTrajectoryId(13);
-		filteredTrajectories.add(filtered13);
-		workingTrajectories = filteredTrajectories;
-		*/
-		//************End Of Rao Experiment****************
 			
 		if(method == ClusteringMethod.TRACLUS)
 		{
@@ -405,28 +346,17 @@ public class testTrajectoryClustering {
 
 		if(method == ClusteringMethod.KMEANS_EUCLIDEAN)
 		{
-		segmentationMethod = SegmentationMethod.douglasPeucker;
-		//For Trajectory Partition using Douglas-Peucker
-		double epsilonDouglasPeucker = 0.001;
-		fixNumberPartitionSegment = 9; //normal value = 8 //9 for tests with zay
-		int minNumElems = 8;
-		
-		//overwriting test parameters
-		//eNeighborhoodParameter = (float) 27;
-		traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-		
-
-		//For Kmeans for Whole trajectories
-		testClusters = traclus.executeKMeansClusterOverTrajectories(15, minNumElems, calculateSilhouetteCoefficient);
+			//For Kmeans for Whole trajectories
+			int minNumElems = 8;
+			int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+				
+			traclus = new Traclus(workingTrajectories);
+	
+			testClusters = traclus.executeKMeansDTW(k, minNumElems, calculateSilhouetteCoefficient);
 		}
 
 		if(method == ClusteringMethod.DBH_APPROXIMATION_DTW)
 		{
-			segmentationMethod = SegmentationMethod.douglasPeucker;
-			//For Trajectory Partition using Douglas-Peucker
-			double epsilonDouglasPeucker = 0.001;
-			fixNumberPartitionSegment = 9;  //normal value = 8 //9 for tests with zay
-			
 			//Parameters only for DBH APPROXIMATION
 			int minNumElems = 1;
 			//float t1 = 0; //Find this parameter
@@ -436,8 +366,7 @@ public class testTrajectoryClustering {
 			float mergeRatio = 1/2;
 			boolean merge = false;
 			
-			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-			
+			traclus = new Traclus(workingTrajectories);
 			
 			//I need to establish better parameters
 			testClusters = traclus.executeDBHApproximationOfClusterOverTrajectories(l, numBits, minNumElems, merge, mergeRatio);
@@ -460,7 +389,7 @@ public class testTrajectoryClustering {
 		{
 			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
 			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
-			int k = 97; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			int k = 98; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
@@ -474,7 +403,7 @@ public class testTrajectoryClustering {
 			int k = 98; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 
 			traclus = new Traclus(workingTrajectories);
-			testClusters = traclus.executeKMedoidsClusterOverTrajectories(k, minNumElems);
+			testClusters = traclus.executeKMedoidsDTW(k, minNumElems);
 		}
 		
 		//For K-MeansDTW
@@ -522,9 +451,6 @@ public class testTrajectoryClustering {
 		//For LSH Using Euclidean distance
 		if(method == ClusteringMethod.LSH_EUCLIDEAN_SLIDING_WIN)
 		{
-			//Parameters for Partition
-			double epsilonDouglasPeucker = 0.001;
-			
 			//Parameters for LSH
 			int minNumElems = 1;
 			int numHashingFunctions = 5;
@@ -532,8 +458,7 @@ public class testTrajectoryClustering {
 			int	slidingWindowSize = 4;
 			int k = 15; //At the end we do K-Means over the feature vectors
 			
-			traclus = new Traclus(workingTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-			
+			traclus = new Traclus(workingTrajectories);
 			//For LSH EUCLIDEAN
 			testClusters = traclus.executeLSHEuclideanSlidingWindow(numHashingFunctions, lshFunctionWindowSize, minNumElems, slidingWindowSize, k, calculateSilhouetteCoefficient);
 			
@@ -548,7 +473,19 @@ public class testTrajectoryClustering {
 			int k = 19; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 			
 			traclus = new Traclus(workingTrajectories);
-			testClusters = traclus.executeKmeansOverLCSS(numBits, minNumElems, k);	
+			testClusters = traclus.executeKmeansLCSS(numBits, minNumElems, k);	
+		}
+		
+		//TODO Finish and test LCSS
+		//For KMeans using LCSS
+		if(method == ClusteringMethod.KMEDOIDS_LCSS)
+		{
+			//Parameters for Kmedoids LCSS
+			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
+			int k = 19; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			
+			traclus = new Traclus(workingTrajectories);
+			testClusters = traclus.executeKmedoidsLCSS(minNumElems, k);	
 		}
 		
 		
@@ -1161,13 +1098,27 @@ public class testTrajectoryClustering {
 			{
 				if(originalCompleteTrajectories!=null)
 				{
-					workingTrajectories = InputManagement.simplifyTrajectoriesFromDatasetAusSign(fixNumberPartitionSegment, originalCompleteTrajectories);
+					workingTrajectories = InputManagement.simplifyTrajectoriesFromDataset(fixNumberPartitionSegment, originalCompleteTrajectories);
 				}else{
 					System.err.println("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
 					throw new Exception("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
 				}
 			}else{
 				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetAusSign();
+			}
+			break;
+		case GEOLIFE:
+			if(simplifyTrajectories)
+			{
+				if(originalCompleteTrajectories!=null)
+				{
+					workingTrajectories = InputManagement.simplifyTrajectoriesFromDataset(fixNumberPartitionSegment, originalCompleteTrajectories);
+				}else{
+					System.err.println("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
+					throw new Exception("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
+				}
+			}else{
+				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetMicrosoftGeolife(150);
 			}
 			break;
 		case CROSS:
