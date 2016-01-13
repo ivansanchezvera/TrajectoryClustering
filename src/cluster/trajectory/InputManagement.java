@@ -747,4 +747,66 @@ public class InputManagement {
 		return simplifiedTrajectories;
 	}
 
+
+	/**
+	 * For input and adapting Pendigit Dataset to our trajectory format.
+	 * https://archive.ics.uci.edu/ml/datasets/Pen-Based+Recognition+of+Handwritten+Digits
+	 * @return A set of trajectories in our format
+	 */
+	public static ArrayList<Trajectory> generateTestTrajectoriesFromDataSetPendigit() 
+	{
+		//Set of trajectories to return
+		ArrayList<Trajectory> testTrajectories = new ArrayList<Trajectory>();
+		try {
+			String pendigitTrajectoryFile = GetPropertyValues.getPropValues("PENDIGIT_Dataset"); 
+			//Just to give different trajectories different trajectory Id
+			int idTrajectory = 0;
+				
+			BufferedReader reader;
+		
+			reader = new BufferedReader(new InputStreamReader(
+		    new FileInputStream(pendigitTrajectoryFile)));
+					
+			//Reading Lines and creating trajectories
+			String line;
+
+			//Create a Date cause dataset has no date info
+			Date d = new Date();
+			while ((line = reader.readLine()) != null) {
+				// process the line.
+				//System.out.println("Trajectory Line: " + line);
+				ArrayList<Point> pointsPerLine = new ArrayList<Point>();
+				line = line.replaceAll("\\s","");
+				String[] trajectoryPointData = line.split(",");
+				//System.out.println("Trajectory decomposed Line: " + trajectoryPointData);
+				String labelString = trajectoryPointData[16];
+				int label = Integer.parseInt(labelString);
+				for(int i=0; i<16; i= i+2)
+				{
+					String xString = trajectoryPointData[i];
+					String yString = trajectoryPointData[i+1];
+					
+					float x = Float.parseFloat(xString);
+					float y = Float.parseFloat(yString);
+					
+					Point p = new Point(x, y, new java.sql.Timestamp(d.getTime()));
+					
+					pointsPerLine.add(p);
+				}
+			
+				Trajectory t = new Trajectory(idTrajectory, pointsPerLine);
+				t.setClusterIdPreLabel(label);
+				idTrajectory++;
+				testTrajectories.add(t);
+			}
+			reader.close();
+		}catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return testTrajectories;
+	}
+
 }

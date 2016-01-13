@@ -60,7 +60,7 @@ public class testTrajectoryClustering {
 			boolean normalize = false;
 			
 			SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
-			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.GEOLIFE;
+			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.PENDIGIT;
 			int numberOfPartitionsPerTrajectory = 25; //normal value = 8 //9 for tests with zay
 			
 			//For big data Experiment
@@ -127,103 +127,6 @@ public class testTrajectoryClustering {
 		}
 	}
 
-	/**
-	 * @param method 
-	 * 
-	 */
-	private static void starkeyElk93Experiment(ClusteringMethod method, boolean calculateSilhouetteCoefficient) {
-		// TODO Auto-generated method stub
-		
-		ArrayList<Trajectory> testTrajectories;
-		//For my dummy trajectories
-		//ArrayList<Trajectory> testTrajectoriesDummy = testTraclus.generateTestTrajectories();
-		//testTrajectories = testTrajectoriesDummy;
-		
-		/* 
-		//Parameters for Dummy Trajectories
-		float eNeighborhoodParameter = (float) 0.01;
-		int minLins = 3;
-		int cardinalityOfClusters = 3;
-		float MLDPrecision = (float) 0.0001;
-		*/
-		
-		//For Microsoft geolife trajectories
-		//ArrayList<Trajectory> testTrajectoriesGeolife = testTraclus.generateTestTrajectoriesFromDataSetMicrosoftGeolife(2);
-		//testTrajectories = testTrajectoriesGeolife;
-		
-		/* 
-		//Parameters for Geolife
-		float eNeighborhoodParameter = (float) 0.01;
-		int minLins = 3;
-		int cardinalityOfClusters = 3;
-		float MLDPrecision = (float) 0.0001;
-		*/
-		
-		//Make sure to initilize this for final version
-		Traclus traclus = null;
-		
-		//Partition Parameters
-		SegmentationMethod segmentationMethod = SegmentationMethod.douglasPeucker;
-		//SegmentationMethod segmentationMethod = SegmentationMethod.traclus;
-		
-		//General Parameters, might be overwritten
-		float eNeighborhoodParameter = (float) 27;
-		int minLins = 8;
-		int cardinalityOfClusters = 9;
-		float MLDPrecision = (float) 1;
-		
-		//Generate trajectories from DATA
-		//Should have an enum and switch for different cases (generated data, starkey, microsoft data, hurricane data *not available*, soccer Data *not available.
-		//For Starkley Animal trajectories to compara with paper
-		ArrayList<Trajectory> testTrajectoriesStarkey = InputManagement.generateTestTrajectoriesFromDataSetAnimalsStarkey("E", 1993,MLDPrecision);	
-		testTrajectories = testTrajectoriesStarkey;
-
-		
-		
-		if(segmentationMethod == SegmentationMethod.traclus)
-		{
-		//Override Parameters for Starkey using traclus
-		eNeighborhoodParameter = (float) 27;
-		minLins = 8;
-		cardinalityOfClusters = 9;
-		
-		//For Original Traclus Trajectory Partition 		
-		traclus = new Traclus(testTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, segmentationMethod);
-		//End of trajectory Partition via Original Traclus Partition Phase
-		}
-		
-		if(segmentationMethod == SegmentationMethod.douglasPeucker)
-		{
-		//For Trajectory Partition using Douglas-Peucker
-		double epsilonDouglasPeucker = 0.001;
-		int fixNumberPartitionSegment = 32;
-		
-		//overwriting test parameters
-		//eNeighborhoodParameter = (float) 27;
-		
-		//Parameter for DTW distance
-		eNeighborhoodParameter = (float) 520000;
-		minLins = 1;
-		cardinalityOfClusters = 1;
-		//end of douglas peucker ovewriten parameters for test
-		traclus = new Traclus(testTrajectories, eNeighborhoodParameter, minLins, cardinalityOfClusters, epsilonDouglasPeucker, fixNumberPartitionSegment, segmentationMethod);
-		}
-		//End of Douglas Peucker
-		
-		//For previous Traclus implementation
-		//ArrayList<Cluster> testClusters = traclus.executeTraclus();
-		
-		//Now working over Whole trajectory
-		//ArrayList<Cluster> testClusters = traclus.executeDensityBasedClusterOverTrajectories();
-		
-		//For Kmeans for Whole trajectories
-		ArrayList<Cluster> testClusters = traclus.executeKMeansDTW(13, minLins, calculateSilhouetteCoefficient);
-		
-		//Here print Real cluster data, we do not have those labels yet here
-
-		printSetOfCluster(minLins, testClusters, false);
-	}
-	
 	private static void CVRRExperiment(ClusteringMethod method, TrajectoryDatasets trajectoryDataset,
 			boolean plotTrajectories, boolean plotCompleteTrajectoriesEquivalentForSimplifiedClusters, boolean simplifyTrajectories, 
 			SegmentationMethod simplificationMethod, int fixNumberPartitionSegment, boolean veryBigData, int numTrajectoryBigDataset, 
@@ -263,6 +166,7 @@ public class testTrajectoryClustering {
 		switch (trajectoryDataset) {
 		case AUSSIGN:
 		case GEOLIFE:
+		case PENDIGIT:
 			workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset, originalCompleteTrajectories);
 			break;
 		case CROSS:
@@ -270,7 +174,7 @@ public class testTrajectoryClustering {
 			workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset, null);
 			break;
 		default:
-			break;
+			throw new Exception("Must select a valid dataset");
 		}
 		
 		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
@@ -278,6 +182,7 @@ public class testTrajectoryClustering {
 			switch (trajectoryDataset) {
 			case GEOLIFE:
 			case AUSSIGN:
+			case PENDIGIT:
 				originalCompleteTrajectories = filterAusSignDataset(workingTrajectories, originalCompleteTrajectories);
 				break;
 			case CROSS:
@@ -350,7 +255,7 @@ public class testTrajectoryClustering {
 		{
 			//For Kmeans for Whole trajectories
 			int minNumElems = 8;
-			int k = 15; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			int k = 10; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 				
 			traclus = new Traclus(workingTrajectories);
 	
@@ -390,8 +295,8 @@ public class testTrajectoryClustering {
 		if(method == ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS)
 		{
 			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
-			int numBits = 10; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
-			int k = 98; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			int numBits = 4; //Number of KBit functions to produce, that is the length of signature, thus lenght of feature vector
+			int k = 10; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 			boolean isBinaryFeatureVector = false; //Cause we want a FV of real numbers 
 			
 			traclus = new Traclus(workingTrajectories);
@@ -402,7 +307,7 @@ public class testTrajectoryClustering {
 		if(method == ClusteringMethod.KMEDOIDS_DTW)
 		{
 			int minNumElems = 1; //To Discriminate all those clusters that have less elements than this. Currently unused
-			int k = 98; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
+			int k = 10; //Number of Clusters to generate with Kmeans over the feature vector of the trajectories
 
 			traclus = new Traclus(workingTrajectories);
 			testClusters = traclus.executeKMedoidsDTW(k, minNumElems);
@@ -1135,6 +1040,20 @@ public class testTrajectoryClustering {
 				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(exported, simplifyTrajectories, dataset);
 			}else{
 				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetCVRR(dataset, simplifyTrajectories, null);
+			}
+			break;
+		case PENDIGIT:
+			if(simplifyTrajectories)
+			{
+				if(originalCompleteTrajectories!=null)
+				{
+					workingTrajectories = InputManagement.simplifyTrajectoriesFromDataset(fixNumberPartitionSegment, originalCompleteTrajectories);
+				}else{
+					System.err.println("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
+					throw new Exception("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
+				}
+			}else{
+				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetPendigit();
 			}
 			break;
 		default:

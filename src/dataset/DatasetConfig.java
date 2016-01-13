@@ -36,6 +36,10 @@ public class DatasetConfig {
 			this.k = 19; //TODO Find out what this value should be
 			this.defaultNumPartitions = 50;
 			break;
+		case PENDIGIT:
+			this.k = 10;
+			this.defaultNumPartitions = 16;
+			break;
 		case ELK:
 			this.k = 13; //TODO Find out what this value should be
 			this.defaultNumPartitions = 50;
