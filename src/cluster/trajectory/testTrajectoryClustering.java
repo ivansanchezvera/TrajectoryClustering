@@ -44,7 +44,7 @@ public class testTrajectoryClustering {
 	public static void main(String[] args) {
 		try {
 			
-			ClusteringMethod method = ClusteringMethod.KMEDOIDS_DTW;
+			ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
 			//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 			//starkeyElk93Experiment(method);
 			boolean plotTrajectories = false;
@@ -262,6 +262,7 @@ public class testTrajectoryClustering {
 		
 		switch (trajectoryDataset) {
 		case AUSSIGN:
+		case GEOLIFE:
 			workingTrajectories = getTrajectories(simplifyTrajectories, fixNumberPartitionSegment, dataset, trajectoryDataset, originalCompleteTrajectories);
 			break;
 		case CROSS:
@@ -275,6 +276,7 @@ public class testTrajectoryClustering {
 		//Get the original trajectories to work with complete trajectory plots (requested by Zay).
 		if(plotCompleteTrajectoriesEquivalentForSimplifiedClusters && simplifyTrajectories){
 			switch (trajectoryDataset) {
+			case GEOLIFE:
 			case AUSSIGN:
 				originalCompleteTrajectories = filterAusSignDataset(workingTrajectories, originalCompleteTrajectories);
 				break;
