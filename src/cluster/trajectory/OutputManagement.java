@@ -22,7 +22,7 @@ public class OutputManagement {
 		String CVRRdatasetName = dataSetName;
 		ArrayList<Trajectory> trajectoriesFromInput = InputManagement.generateTestTrajectoriesFromDataSetCVRR(CVRRdatasetName, false, null);
 		
-		ArrayList<Trajectory> simplifiedTrajectories = Traclus.simplifyTrajectories(trajectoriesFromInput, true, SegmentationMethod.douglasPeucker, numberOfPartitions);
+		ArrayList<Trajectory> simplifiedTrajectories = Trajectory.simplifyTrajectories(trajectoriesFromInput, true, SegmentationMethod.douglasPeucker, numberOfPartitions);
 		
 		//This is so we can Print the original Trajectories
 		ArrayList<Integer> representedTrajectories = new ArrayList<Integer>();

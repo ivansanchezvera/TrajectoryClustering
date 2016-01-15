@@ -44,11 +44,11 @@ public class testTrajectoryClustering {
 	public static void main(String[] args) {
 		try {
 			
-			ClusteringMethod method = ClusteringMethod.DBH_DTW_FEATURE_VECTOR_REAL_NUMBERS;
+			ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 			//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 			//starkeyElk93Experiment(method);
 			boolean plotTrajectories = false;
-			boolean simplifyTrajectories = false;
+			boolean simplifyTrajectories = true;
 			boolean printDetailedClusters = true;
 			boolean printOutputZayFile = false;
 			boolean printOutputZayToScreen = false;
@@ -61,7 +61,7 @@ public class testTrajectoryClustering {
 			
 			SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
 			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.GEOLIFE;
-			int numberOfPartitionsPerTrajectory = 25; //normal value = 8 //9 for tests with zay
+			int numberOfPartitionsPerTrajectory = 8; //normal value = 8 //9 for tests with zay
 			
 			//For big data Experiment
 			boolean veryBigData = false;

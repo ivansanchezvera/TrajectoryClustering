@@ -733,12 +733,8 @@ public class InputManagement {
 	{
 		long startDouglasPeuckerTime = System.nanoTime();
 		ArrayList<Trajectory> simplifiedTrajectories = new ArrayList<Trajectory>();
-		for(Trajectory t: originalCompleteTrajectories)
-		{
-			//TODO correct this, epsilon parameter 0.001 is useless, refactor this method in the whole project
-			Trajectory tempSimplifiedTrajectory = t.simplifyTrajectoryDouglasPeucker(0.001, fixNumberPartitionSegment);
-			simplifiedTrajectories.add(tempSimplifiedTrajectory);
-		}
+		
+		simplifiedTrajectories = Trajectory.simplifyTrajectories(originalCompleteTrajectories, true, SegmentationMethod.douglasPeucker, fixNumberPartitionSegment);
 		
 		//For time
 		long stopDouglasPeuckerTime = System.nanoTime();
