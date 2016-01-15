@@ -232,6 +232,9 @@ public class InputManagement {
 			
 			float MDLPrecision = (float) 0.00001;
 			
+			//Just to give different trajectories different trajectory Id
+			int idTrajectory = 0;
+			
 			for(int i = 0; i<=userIndex; i++)
 			{
 				String tempUserFolder = String.format("%03d", i);
@@ -240,8 +243,7 @@ public class InputManagement {
 				ArrayList<String> UserTrajectoryFiles = CommonFunctions.listFilesForFolder(fileToUserFolder);
 				
 				
-				//Just to give different trajectories different trajectory Id
-				int idTrajectory = 0;
+				
 				
 				for(String userTrajectoryFile: UserTrajectoryFiles)
 				{

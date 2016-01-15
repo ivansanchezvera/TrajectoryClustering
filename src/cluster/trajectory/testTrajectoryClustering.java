@@ -48,7 +48,7 @@ public class testTrajectoryClustering {
 			//ClusteringMethod method = ClusteringMethod.KMEANS_EUCLIDEAN;
 			//starkeyElk93Experiment(method);
 			boolean plotTrajectories = false;
-			boolean simplifyTrajectories = true;
+			boolean simplifyTrajectories = false;
 			boolean printDetailedClusters = true;
 			boolean printOutputZayFile = false;
 			boolean printOutputZayToScreen = false;
@@ -60,7 +60,7 @@ public class testTrajectoryClustering {
 			boolean normalize = false;
 			
 			SegmentationMethod simplificationMethod = SegmentationMethod.douglasPeucker;
-			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.PENDIGIT;
+			TrajectoryDatasets trajectoryDataset = TrajectoryDatasets.GEOLIFE;
 			int numberOfPartitionsPerTrajectory = 25; //normal value = 8 //9 for tests with zay
 			
 			//For big data Experiment
@@ -1025,7 +1025,7 @@ public class testTrajectoryClustering {
 					throw new Exception("Error: Cannot calcultate simplified trajectories for dataset " + trajectoryDataset.toString() + " if original dataset is null.");
 				}
 			}else{
-				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetMicrosoftGeolife(150);
+ 				workingTrajectories = InputManagement.generateTestTrajectoriesFromDataSetMicrosoftGeolife(2);
 			}
 			break;
 		case CROSS:
